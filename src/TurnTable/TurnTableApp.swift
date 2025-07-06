@@ -30,16 +30,22 @@ struct TurnTableApp: App {
 
 class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        let wlen = NSApp.windows.count
-        if (wlen > 1) {
+    func closeMulti() {
+        if (NSApp.windows.count > 1) {
             if let tempWindow = NSApp.windows.last {
                 tempWindow.close()
+            } else {
+                //break
             }
         }
+    }
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        closeMulti()
         if let mainWindow = NSApp.windows.first {
             mainWindow.delegate = self
             if let savedFrame = UserDefaults.standard.string(forKey:"WindowFrame") {
+                print(Date(),"DEBUG","EXEC",savedFrame)
                 mainWindow.setFrame(from:savedFrame)
                 mainWindow.makeKeyAndOrderFront(nil)
             } else {
@@ -49,15 +55,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        let wlen = NSApp.windows.count
-        if (wlen > 1) {
-            if let tempWindow = NSApp.windows.last {
-                tempWindow.close()
-            }
-        }
-        print(Date(),"DEBUG","WIND",wlen,flag)
+        closeMulti()
         if let mainWindow = NSApp.windows.first {
             if let savedFrame = UserDefaults.standard.string(forKey:"WindowFrame") {
+                print(Date(),"DEBUG","WIND",savedFrame)
                 mainWindow.setFrame(from:savedFrame)
                 mainWindow.makeKeyAndOrderFront(nil)
             } else {
@@ -69,13 +70,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     func windowShouldClose(_ sender: NSWindow) -> Bool {
-        let wlen = NSApp.windows.count
-        if (wlen > 1) {
-            if let tempWindow = NSApp.windows.last {
-                tempWindow.close()
-            }
-        }
+        closeMulti()
         if let mainWindow = NSApp.windows.first {
+            print(Date(),"DEBUG","DOWN",mainWindow.frameDescriptor)
             UserDefaults.standard.set(mainWindow.frameDescriptor, forKey:"WindowFrame")
             mainWindow.orderOut(nil)
         }
@@ -83,13 +80,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        let wlen = NSApp.windows.count
-        if (wlen > 1) {
-            if let tempWindow = NSApp.windows.last {
-                tempWindow.close()
-            }
-        }
+        closeMulti()
         if let mainWindow = NSApp.windows.first {
+            print(Date(),"DEBUG","TERM",mainWindow.frameDescriptor)
             UserDefaults.standard.set(mainWindow.frameDescriptor, forKey:"WindowFrame")
             mainWindow.orderOut(nil)
         }

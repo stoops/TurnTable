@@ -13,7 +13,7 @@ import AVFoundation
 import AppKit
 
 extension String {
-    func version() -> String { return "1.1.151" }
+    func version() -> String { return "1.1.377" }
 }
 
 struct mdat: Identifiable {
@@ -26,17 +26,544 @@ struct mdat: Identifiable {
     let year: String
     let tstr: String
     let date: String
+    let covr: String
     let null: String
     let hash: String
     let dobj: Date
     let time: Int64
 }
 
+struct tabs: View {
+
+    @Binding var objc: bind
+    @Binding var sees: UUID?
+    @Binding var sels: UUID?
+    @Binding var scro: UUID?
+    @Binding var srts: String
+
+    @State var sync = CGFloat.zero
+    @FocusState var isfo: Bool
+    @State var sell = [nil, nil] as [UUID?]
+
+    @State var flag = 0
+    @State var srtw = 11.0
+    @State var aftr = 11.0
+    @State var radr = 9.0
+    @State var rowp = 9.0
+    @State var offz = 5.0
+    @State var sepp = 10.0
+    @State var sizh = 25.0
+    @State var minw = 55.0
+    @State var sizr = 0.79
+    @State var rowr = 0.91
+    @State var opac = 0.87
+    @State var last = 1970.secs()
+    @State var insl = EdgeInsets(top:3.09, leading:3.09, bottom:3.09, trailing:3.09)
+    @State var refr = UUID()
+
+    struct bind {
+        struct mcol {
+            var cols = [] as [String]
+            var keys = [] as [String]
+            var ordr = [] as [Int]
+            var sizs = [] as [CGFloat]
+            var hist = [] as [[CGFloat]]
+        }
+
+        struct mclr {
+            var body_bord = Color.white
+            var body_radi = 9.99
+            var body_wide = 3.99
+            var head_back = Color.black.opacity(0.35)
+            var head_text = Color.white
+            var head_line_colr = Color.white
+            var head_line_wide = 1.09
+            var head_divr_colr = Color.white
+            var head_divr_wide = 3.09
+            var head_high_text = Color.black
+            var head_high_back = Color.white
+            var head_high_indx = -1
+            var data_back = Color.black.opacity(0.35)
+            var data_text = Color.white
+            var data_high = Color.white.opacity(0.15)
+            var data_line_colr = Color.white
+            var data_line_wide = 0.39
+            var data_rows_type = "rows"
+        }
+
+        var isfo = 0
+        var iscr = 0
+        var isee = -1
+        var isrt = -1
+        var cols = mcol()
+        var rows = [] as [[String]]
+        var clrs = mclr()
+        var cola = { (c:Int, r:Int, v:String, k:String, w:CGFloat, z:Color, s:UUID?, e:CGFloat) in
+            if ((c > 0) || (r > 0)) { return AnyView(Text(v).foregroundColor(z).frame(width:w, alignment:.leading)) }
+            else { return AnyView(Text(" ").foregroundColor(z)) }
+        }
+        var pact = {
+            /* no-op */
+        }
+
+        func proc<Data>(_ data:Data, colz:KeyValuePairs<String,KeyPath<Data.Element, String>>) -> [[String]] where Data : RandomAccessCollection {
+            var colt = ["*"] as [String]
+            var coli = ["*"] as [String]
+            for (keyn, keyp) in colz {
+                let keyl = keyp.debugDescription.components(separatedBy:".")
+                colt.append(keyn)
+                coli.append((keyl.count > 1) ? keyl.last! : "")
+            }
+            return [colt, coli]
+        }
+
+        func main<Data>(_ data:Data, colz:KeyValuePairs<String,KeyPath<Data.Element, String>>, ordr:[Int], sizs:[CGFloat], hist:[[CGFloat]]) -> bind where Data : RandomAccessCollection {
+            var outp = tabs.bind()
+            let colt = outp.proc(data, colz:colz)
+            outp.isfo += 1
+            outp.clrs = tabs.bind.mclr()
+            outp.cols = tabs.bind.mcol(cols:colt[0], keys:colt[1], ordr:ordr, sizs:sizs, hist:hist)
+            return outp
+        }
+    }
+
+    struct okey: PreferenceKey {
+        typealias Value = CGFloat
+        static var defaultValue = CGFloat.zero
+        static func reduce(value: inout Value, nextValue: () -> Value) {
+            value += nextValue()
+        }
+    }
+
+    struct ddel: DropDelegate {
+        @Binding var objc: bind
+        let indx: Int
+        let dest: String
+        func dropEntered(info:DropInfo) {
+            objc.clrs.head_high_indx = indx
+        }
+        func dropExited(info:DropInfo) {
+            objc.clrs.head_high_indx = -1
+        }
+        func performDrop(info:DropInfo) -> Bool {
+            if (indx > 0) {
+                getDrop(info:info, meth:1)
+                return true
+            }
+            return false
+        }
+        func dropUpdated(info:DropInfo) -> DropProposal? {
+            return DropProposal(operation: .move)
+        }
+        func setDrop(from:String) {
+            if (indx > 0) {
+                var idxs = [0, -1, -1, 0, -1, -1]
+                for item in objc.cols.cols {
+                    if (item == from) { idxs[1] = idxs[0] }
+                    if (item == dest) { idxs[2] = idxs[0] }
+                    idxs[0] += 1
+                }
+                if ((idxs[1] > 0) && (idxs[2] > 0)) {
+                    for item in objc.cols.ordr {
+                        if (item == idxs[1]) { idxs[4] = idxs[3] }
+                        if (item == idxs[2]) { idxs[5] = idxs[3] }
+                        idxs[3] += 1
+                    }
+                    if ((idxs[4] != -1) && (idxs[5] != -1)) {
+                        var otmp = objc.cols.ordr
+                        let valu = idxs[1]
+                        if (idxs[4] > idxs[5]) {
+                            otmp.remove(at:idxs[4])
+                            otmp.insert(valu, at:idxs[5])
+                        } else if (idxs[4] < idxs[5]) {
+                            otmp.insert(valu, at:idxs[5]+1)
+                            otmp.remove(at:idxs[4])
+                        }
+                        objc.cols.ordr = otmp
+                    }
+                }
+            }
+        }
+        func getDrop(info:DropInfo, meth:Int) {
+            if let item = info.itemProviders(for:["public.text"]).first {
+                item.loadItem(forTypeIdentifier:"public.text", options:nil) { (data, err) in
+                    if let text = data as? Data {
+                        let strs = String(decoding:text, as:UTF8.self)
+                        if (meth == 1) { setDrop(from:strs) }
+                    }
+                }
+            }
+        }
+    }
+
+    var body: some View {
+        ZStack {
+            ZStack {
+                VStack(spacing:0) {
+                    GeometryReader { geome in
+                        ScrollViewReader { proxy in
+                            VStack(spacing:0) {
+                                ScrollView([.horizontal], showsIndicators:false) {
+                                    VStack(spacing:0) {
+                                        Spacer()
+                                        HStack {
+                                            sepr(i:-1, h:sizh*sizr, e:true, w:geome.size.width, c:Color.clear).offset(y:-1*(offz/2.75))
+                                            ForEach(0..<objc.cols.cols.count, id:\.self) { i in
+                                                cold(i:i+1, j:-1, w:geome.size.width, r:refr, c:Color.clear).offset(y:-0.99)
+                                                sepr(i:i+1, h:sizh*sizr, e:true, w:geome.size.width, c:objc.clrs.body_bord).offset(y:-1*(offz/2.75))
+                                            }
+                                            Color.clear.frame(width:aftr, height:1.0).contentShape(Rectangle())
+                                            Spacer()
+                                        }.frame(minWidth:geome.size.width).offset(y:-0.99)
+                                            .offset(x:-sync)
+                                        line(i:1, j:-1, k:1, s:objc.clrs.head_line_wide, c:Color.clear, q:-1).offset(y:-1*(offz/2.75))
+                                        Spacer()
+                                    }
+                                }.foregroundColor(Color.clear).background(Color.clear)
+                                    .focusable().focusEffectDisabled().focused($isfo)
+                                Spacer()
+                            }.frame(height:sizh+offz).padding(.top, offz)
+                            VStack(spacing:0) {
+                                ScrollView([.horizontal, .vertical], showsIndicators:(objc.rows.count < 1) ? false : true) {
+                                    VStack(spacing:0) {
+                                        LazyVStack(spacing:0) {
+                                            if (objc.rows.count < 1) {
+                                                HStack {
+                                                    Color.clear.frame(minWidth:geome.size.width).contentShape(Rectangle())
+                                                    Spacer()
+                                                }
+                                            }
+                                            ForEach(0..<objc.rows.count, id:\.self) { j in
+                                                let u = UUID(uuidString:objc.rows[j][0])
+                                                HStack {
+                                                    sepr(i:-1, h:sizh*sizr, e:false, w:geome.size.width, c:Color.clear)
+                                                    ForEach(0..<objc.rows[j].count, id:\.self) { i in
+                                                        rowd(i:i+1, j:j+1, w:geome.size.width, r:refr, c:Color.clear)
+                                                        sepr(i:i+1, h:sizh*sizr, e:false, w:geome.size.width, c:Color.clear)
+                                                    }
+                                                    Color.clear.frame(width:aftr, height:1.0).contentShape(Rectangle())
+                                                    Spacer()
+                                                }.id((u != nil) ? u! : UUID(uuidString:"0"))
+                                                    .frame(minWidth:geome.size.width)
+                                                    .frame(height:(sizh+offz)*rowr)
+                                                    .contentShape(Rectangle())
+                                                    .background() { back(u:u, s:sels, r:j) }
+                                                    .onTapGesture {
+                                                        let secs = 1970.secs()
+                                                        if (u != nil) {
+                                                            sels = u!
+                                                            sell.append(sels!)
+                                                            while (sell.count > 2) { sell.removeFirst() }
+                                                            if (sell[0] != nil) {
+                                                                if ((sell[0]! == sell[1]!) && ((secs - last) <= 0.50)) {
+                                                                    objc.pact()
+                                                                }
+                                                            }
+                                                        }
+                                                        last = secs
+                                                    }
+                                                line(i:-1, j:j, k:1, s:objc.clrs.data_line_wide, c:Color.clear, q:1)
+                                            }
+                                        }.id(refr).background(GeometryReader { tempg in
+                                            Color.clear.preference(key:okey.self, value:-tempg.frame(in:.named("scro")).origin.x)
+                                        }).onPreferenceChange(okey.self) { value in
+                                            sync = value
+                                        }
+                                        Spacer()
+                                    }.frame(minHeight:geome.size.height).padding(.top, offz/1.9)
+                                }.focusable().focusEffectDisabled().focused($isfo)
+                                    .coordinateSpace(name:"scro")
+                            }.padding(.top, -1 * (offz*1.55))
+                            VStack(spacing:0) {  }.onChange(of:objc.iscr) {
+                                seek()
+                                if (scro != nil) {
+                                    withAnimation {
+                                        proxy.scrollTo(scro!, anchor:.leading)
+                                    }
+                                }
+                            }.onChange(of:sels) {
+                                seek()
+                            }.onChange(of:srts) {
+                                seek()
+                            }
+                        }.foregroundColor(Color.clear).background(Color.clear)
+                    }
+                }
+            }.padding(EdgeInsets(top:objc.clrs.body_wide, leading:objc.clrs.body_wide, bottom:objc.clrs.body_wide, trailing:objc.clrs.body_wide))
+            .background() { ZStack {
+                let magp = 0.99
+                let magb = 1.99
+                let radi = objc.clrs.body_radi
+                let bord = objc.clrs.body_wide
+                let offy = objc.clrs.head_line_wide
+                VStack(spacing:0) {
+                    RoundedRectangle(cornerRadius:radi-magb).frame(maxHeight:.infinity).foregroundColor(objc.clrs.data_back.opacity(opac)).padding(EdgeInsets(top:bord-magp, leading:bord-magp, bottom:bord-magp, trailing:bord-magp))
+                }
+                VStack(spacing:0) {
+                    RoundedRectangle(cornerRadius:radi-magb).frame(height:sizh+offz+offy).foregroundColor(objc.clrs.head_back.opacity(opac)).padding(EdgeInsets(top:bord-magp, leading:bord-magp, bottom:bord-magp, trailing:bord-magp))
+                    Spacer()
+                }
+                RoundedRectangle(cornerRadius:radi).inset(by:-1*0.09).stroke(objc.clrs.body_bord.opacity(opac), lineWidth:bord)
+            } }
+        }.onChange(of:objc.isfo) {
+            isfo = (objc.isfo == 0) ? false : true
+        }.padding(insl).onAppear {
+            main(inpl:objc.cols.cols)
+            seek()
+            isfo = true
+        }
+    }
+
+    func main(inpl:[String]) {
+        var i = 0
+        for _ in inpl {
+            if (!(objc.cols.ordr.contains(i))) {
+                objc.cols.ordr.append(i)
+            }
+            if (i >= objc.cols.sizs.count) {
+                objc.cols.sizs.append(0.0)
+            }
+            if (i >= objc.cols.hist.count) {
+                objc.cols.hist.append([0.0, 0.0, 0.0, 0.0])
+            }
+            i = (i + 1)
+        }
+    }
+
+    func seek() {
+        var seei = -1
+        if (sels != nil) {
+            var ridx = 0
+            for item in objc.rows {
+                let uidt = UUID(uuidString:item[0])
+                if ((uidt != nil) && (sels! == uidt!)) {
+                    seei = ridx
+                }
+                ridx += 1
+            }
+            scro = sels!
+        }
+        objc.isee = seei
+        var cidx = 0
+        for item in objc.cols.keys {
+            if (srts.lowercased().contains(item.lowercased())) {
+                objc.isrt = objc.cols.ordr[cidx]
+            }
+            cidx += 1
+        }
+        /*DispatchQueue.main.asyncAfter(deadline:.now() + 0.09) {
+            refr = UUID()
+        }*/
+    }
+
+    func perc(s:CGFloat, w:CGFloat, i:Int, n:Int) -> CGFloat {
+        var r = s
+        if ((r < 1.0) && (i > 0) && (n > 1)) {
+            r = (w / CGFloat(n - 1))
+        }
+        r = max(minw, r)
+        r = CGFloat(Int(r))
+        return r
+    }
+
+    func sepr(i:Int, h:CGFloat, e:Bool, w:CGFloat, c:Color) -> AnyView {
+        if (objc.cols.hist.count < objc.cols.cols.count) {
+            return AnyView(EmptyView())
+        }
+        return AnyView(HStack {
+            let l = 1
+            let v = (i <= 0) ? sepp / 2.1 : sepp
+            let k = (i > l) ? objc.cols.ordr[i - 1] : 0
+            let x = (i > l) ? (objc.cols.hist[k][1] - objc.cols.hist[k][3]) : 0.0
+            let z = objc.clrs.head_divr_wide
+            Color.clear.frame(width:v, height:h).offset(x:x).contentShape(Rectangle()).overlay(
+                Color.clear.frame(width:v*1.99, height:h*1.99).contentShape(Rectangle()).overlay(
+                    RoundedRectangle(cornerRadius:radr).foregroundColor(c.opacity(opac))
+                        .padding([.top, .bottom], ((h*1.99)-h)/2.1).padding([.leading, .trailing], ((v*1.99)-z)/2.1)
+                ).onContinuousHover { p in
+                    if ((i > l) && (e == true)) {
+                        if (flag == 0) {
+                            switch p {
+                            case .active:
+                                NSCursor.columnResize.set()
+                            case .ended:
+                                NSCursor.arrow.set()
+                            }
+                        }
+                    }
+                }.gesture(
+                    DragGesture(minimumDistance:0)
+                    .onChanged { v in
+                        if ((i > l) && (e == true)) {
+                            flag = 1
+                            NSCursor.columnResize.set()
+                            let j = objc.cols.ordr[i - 1]
+                            let s = perc(s:objc.cols.sizs[j], w:w, i:j, n:objc.cols.cols.count)
+                            let m = (v.location.x - ((sepp * 1.99) / 2))
+                            var f = 0
+                            var z = objc.cols.hist[j]
+                            if (abs(v.translation.width) == 0.0) {
+                                z = [m, m, m, m] as [CGFloat]
+                                f = 2
+                            }
+                            var a = z[0]
+                            var b = z[3]
+                            if (f == 0) {
+                                a = (z[0] + v.translation.width)
+                                b = 0.0
+                                f = 1
+                            }
+                            let chks = (s + (a - z[0]) + z[2])
+                            if (chks >= minw) {
+                                objc.cols.sizs[j] = chks
+                                if (f == 1) {
+                                    objc.cols.hist[j][1] = a
+                                    objc.cols.hist[j][3] = b
+                                } else if (f == 2) {
+                                    objc.cols.hist[j] = z
+                                }
+                            } else {
+                                objc.cols.sizs[j] = s
+                            }
+                            refr = UUID()
+                        }
+                    }
+                    .onEnded() { v in
+                        if ((i > l) && (e == true)) {
+                            let j = objc.cols.ordr[i - 1]
+                            objc.cols.hist[j] = [0.0, 0.0, 0.0, 0.0]
+                            NSCursor.arrow.set()
+                            flag = 0
+                        }
+                    }
+                )
+            )
+        })
+    }
+
+    func cold(i:Int, j:Int, w:CGFloat, r:UUID, c:Color) -> AnyView {
+        if (objc.cols.sizs.count < objc.cols.cols.count) {
+            return AnyView(EmptyView())
+        }
+        let iidx = objc.cols.ordr[i-1]
+        let strs = objc.cols.cols[iidx]
+        var sizt = objc.cols.sizs[iidx]
+        sizt = (sizt + (CGFloat(r.hashValue % 1000) / 10000))
+        let colr = (objc.clrs.head_high_indx != iidx) ? objc.clrs.head_text : objc.clrs.head_high_text
+        let bgco = (objc.clrs.head_high_indx != iidx) ? Color.clear : objc.clrs.head_high_back
+        let sizw = perc(s:(iidx > 0) ? sizt : 0.0, w:w, i:iidx, n:objc.cols.cols.count)
+        let srte = (objc.isrt == iidx) ? srtw : 0.0
+        return AnyView(objc.cola(iidx, -1, objc.cols.cols[iidx], objc.cols.keys[iidx], sizw, colr, sees, srte)
+            .contentShape(Rectangle())
+            .background() {
+                RoundedRectangle(cornerRadius:3.0).fill(bgco).padding([.top, .bottom], offz * 0.95).padding([.leading, .trailing], -1 * (offz * 1.75)).offset(y:-0.99)
+            }.onTapGesture {
+                if (iidx > 0) {
+                    let defs = "forward"
+                    let prop = objc.cols.keys[iidx]
+                    var dirs = (!(srts.lowercased().contains(defs)) ? defs : "reverse")
+                    if (!(srts.lowercased().contains(prop))) { dirs = defs }
+                    srts = (prop + ":" + dirs)
+                    objc.isrt = iidx
+                }
+            }.onDrag {
+                NSItemProvider(object:String((iidx > 0) ? strs : "---") as NSString)
+            }.onDrop(of:["public.text"], delegate:ddel(objc:$objc, indx:iidx, dest:strs))
+        )
+    }
+
+    func rowd(i:Int, j:Int, w:CGFloat, r:UUID, c:Color) -> AnyView {
+        if (objc.cols.sizs.count < objc.cols.cols.count) {
+            return AnyView(EmptyView())
+        }
+        let iidx = objc.cols.ordr[i-1]
+        var sizt = objc.cols.sizs[iidx]
+        sizt = (sizt + (CGFloat(r.hashValue % 1000) / 10000))
+        let sizw = perc(s:(iidx > 0) ? sizt : 0.0, w:w, i:iidx, n:objc.cols.cols.count)
+        let srte = (objc.isrt == iidx) ? srtw : 0.0
+        return AnyView(objc.cola(-1 * j, iidx, objc.rows[j-1][iidx], objc.cols.keys[iidx], sizw, objc.clrs.data_text, sees, srte))
+    }
+
+    func back(u:UUID?, s:UUID?, r:Int) -> some View {
+        let maxp = max(rowp/3.99, rowp-5.99)
+        var colr = Color.clear
+        if (objc.clrs.data_rows_type == "rows") {
+            if ((r % 2) == 1) {
+                colr = objc.clrs.data_high.opacity(0.11)
+            }
+        }
+        if ((u != nil) && (s != nil) && (u! == s!)) {
+            colr = objc.clrs.data_high.opacity(opac/1.35)
+        }
+        return VStack(spacing:0) {
+            RoundedRectangle(cornerRadius:radr/1.75).fill(colr).padding([.leading, .trailing], maxp).padding([.top, .bottom], -1 * (2 * objc.clrs.data_line_wide))
+        }
+    }
+
+    func line(i:Int, j:Int, k:Int, s:CGFloat, c:Color, q:Double) -> some View {
+        var z = c
+        if (i > -1) {
+            z = objc.clrs.head_line_colr
+        }
+        if (j > -1) {
+            if (objc.clrs.data_rows_type == "line") {
+                z = objc.clrs.body_bord
+            }
+            if (objc.isee > -1) {
+                if ((j == (objc.isee - 1)) || (j == objc.isee)) {
+                    z = Color.clear
+                }
+            }
+        }
+        return VStack(spacing:0) {
+            let v = 1.00
+            let h = max(v, s)
+            Color.clear.frame(height:h).contentShape(Rectangle()).overlay(
+                Color.clear.frame(height:h*1.99).contentShape(Rectangle()).overlay(
+                    RoundedRectangle(cornerRadius:radr).stroke(z, lineWidth:s).foregroundColor(Color.clear).frame(height:v)
+                        .padding([.top, .bottom], ((h*1.99)-h)/2.1).padding([.leading, .trailing], q * rowp)
+                )
+            )
+        }
+    }
+
+    func cola(_ actn:@escaping (Int, Int, String, String, CGFloat, Color, UUID?, CGFloat) -> AnyView) -> Self {
+        self.objc.cola = actn
+        return self
+    }
+
+    func pact(_ actn:@escaping () -> Void) -> Self {
+        self.objc.pact = actn
+        return self
+    }
+
+    func load<Data>(_ data:Data, iden:KeyPath<Data.Element, UUID>, colz:KeyValuePairs<String,KeyPath<Data.Element, String>>) -> Self where Data : RandomAccessCollection {
+        var colt = [] as [[String]]
+        var rowt = [] as [[String]]
+        colt = self.objc.proc(data, colz:colz)
+        for item in data {
+            let uids = item[keyPath:iden].description
+            var rowz = [uids] as [String]
+            for (_, keyp) in colz {
+                rowz.append(item[keyPath:keyp])
+            }
+            rowt.append(rowz)
+        }
+        main(inpl:colt[0])
+        self.objc.cols.cols = colt[0]
+        self.objc.cols.keys = colt[1]
+        self.objc.rows = rowt
+        self.objc.iscr += 1
+        return self
+    }
+
+}
+
 struct slid: View {
     @Binding var locks: Bool
     @Binding var edits: Bool
     @Binding var moved: Bool
-    @Binding var value: Double
+    @Binding var value: CGFloat
     @Binding var colrg: Color
     @Binding var colrb: Color
     @Binding var highg: Color
@@ -46,15 +573,16 @@ struct slid: View {
 
     @State var cobjg: Color?
     @State var cobjb: Color?
+    @State var offxs: CGFloat = 0.0
     @State var coord: CGFloat = 0.0
     @State var brite: CGFloat = 0.19
 
     var body: some View {
         GeometryReader { gr in
-            let radial = (gr.size.height * 0.87)
-            let radius = (gr.size.height * 0.69)
-            let minval = (gr.size.width * 0.005)
-            let maxval = ((gr.size.width * 0.995) - radial)
+            let radial = (round((gr.size.height * 0.87) * 1000) / 1000) as CGFloat
+            let radius = (round((gr.size.height * 0.69) * 1000) / 1000) as CGFloat
+            let minval = (round((gr.size.width * 0.005) * 1000) / 1000) as CGFloat
+            let maxval = (round(((gr.size.width * 0.995) - radial) * 1000) / 1000) as CGFloat
 
             ZStack {
                 RoundedRectangle(cornerRadius:radius)
@@ -62,12 +590,10 @@ struct slid: View {
                     .stroke((cobjg == nil) ? colrg : cobjg!, lineWidth:1.59)
                     .brightness((cobjg == nil) ? 0.00 : brite)
                     .overlay(ZStack {
-                        if (!fills) {
-                            RoundedRectangle(cornerRadius:radius).inset(by:-1.09).foregroundColor(Color.black.opacity(0.11))
-                        }
-                        HStack {
-                            if (fills) {
-                                Rectangle().frame(width:1.0, height:1.0).foregroundColor(Color.clear).overlay(
+                        RoundedRectangle(cornerRadius:radius).inset(by:-1.09).foregroundColor(Color.black.opacity(0.11))
+                        if (fills) {
+                            HStack {
+                                Color.clear.frame(width:1.0, height:1.0).contentShape(Rectangle()).overlay(
                                     RoundedRectangle(cornerRadius:radius)
                                         .inset(by:-1.09)
                                         .foregroundColor((cobjb == nil) ? colrb : cobjb!).opacity(0.35)
@@ -76,65 +602,52 @@ struct slid: View {
                                 )
                                 Spacer()
                             }
-                        }})
+                        }
+                    })
                 HStack {
-                    Circle()
-                        .foregroundColor((cobjb == nil) ? colrb : cobjb!)
-                        .brightness(0.19)
-                        .brightness((cobjg == nil) ? 0.00 : brite)
-                        .frame(width:radial, height:radial)
-                        .offset(x:safes(valus:self.value, minms:minval, maxms:maxval, divrs:1.0), y:0.0)
-                        .gesture(
-                            DragGesture(minimumDistance:0)
-                                .onChanged { v in
-                                    if (!locks) {
-                                        self.edits = true
-                                        self.cobjg = self.highg
-                                        self.cobjb = self.highb
-                                        if (abs(v.translation.width) < 0.1) {
-                                            self.coord = safes(valus:self.value, minms:minval, maxms:maxval, divrs:1.0)
-                                        }
-                                        let temps = (self.coord + v.translation.width)
-                                        self.value = safes(valus:temps, minms:minval, maxms:maxval, divrs:maxval) / maxval
-                                    }
-                                }
-                                .onEnded() { v in
-                                    if (!locks) {
-                                        self.edits = false
-                                        self.cobjg = nil
-                                        self.cobjb = nil
-                                    }
-                                }
-                        )
+                    Color.clear.frame(width:radial, height:radial).contentShape(Rectangle()).overlay(
+                        Color.clear.frame(width:radial*1.99, height:radial*1.99).contentShape(Rectangle()).overlay(
+                            Circle()
+                                .padding(radial/1.9)
+                                .foregroundColor((cobjb == nil) ? colrb : cobjb!)
+                                .brightness(0.19)
+                                .brightness((cobjg == nil) ? 0.00 : brite)
+                        ).offset(x:offxs, y:0.0)
+                    )
                     Spacer()
                 }
+            }.onAppear {
+                offxs = safes(valus:value, minms:minval, maxms:maxval, divrs:1.0)
+            }.onChange(of:value) {
+                offxs = safes(valus:value, minms:minval, maxms:maxval, divrs:1.0)
             }.gesture(
                 DragGesture(minimumDistance:0)
-                    .onChanged { v in
-                        if (!locks) {
-                            self.edits = true
-                            self.cobjg = self.highg
-                            self.cobjb = self.highb
-                            let temps = ((v.location.x - (radial / 2)) / maxval)
-                            let valus = max(0.0, min(temps, 1.0))
-                            self.value = valus
-                            self.moved = true
-                        }
+                .onChanged { v in
+                    if (!locks) {
+                        self.edits = true
+                        self.cobjg = self.highg
+                        self.cobjb = self.highb
+                        let temp = ((v.location.x - (radial / 2)) / maxval)
+                        let valu = max(0.0, min(temp, 1.0))
+                        self.value = valu
+                        self.moved = true
                     }
-                    .onEnded() { v in
-                        if (!locks) {
-                            self.edits = false
-                            self.cobjg = nil
-                            self.cobjb = nil
-                        }
+                }
+                .onEnded() { v in
+                    if (!locks) {
+                        self.edits = false
+                        self.cobjg = nil
+                        self.cobjb = nil
                     }
+                }
             )
         }
     }
 
-    func safes(valus:Double, minms:Double, maxms:Double, divrs:Double) -> Double {
+    func safes(valus:CGFloat, minms:CGFloat, maxms:CGFloat, divrs:CGFloat) -> CGFloat {
         if (locks) { return minms }
-        return min(maxms, max(minms, valus * (maxms / divrs)))
+        let outp = (round(min(maxms, max(minms, valus * (maxms / divrs))) * 1000) / 1000)
+        return outp
     }
 }
 
@@ -157,6 +670,18 @@ struct TextFieldClearButton: ViewModifier {
                     }
                 }
             }
+    }
+}
+
+extension Int {
+    func time() -> Int {
+        return Int(Date().timeIntervalSince1970)
+    }
+    func secs() -> Double {
+        return Date().timeIntervalSince1970
+    }
+    func date() -> Date {
+        return Date(timeIntervalSince1970:0)
     }
 }
 
@@ -184,7 +709,7 @@ extension Data {
     }
     func hexs(options: HexEncodingOptions = []) -> String {
         let format = options.contains(.upperCase) ? "%02hhX" : "%02hhx"
-        return self.map { String(format: format, $0) }.joined()
+        return self.map { String(format:format, $0) }.joined()
     }
     func id3g(id3t:String?) -> String {
         let l = [
@@ -262,7 +787,29 @@ extension View {
     }
 }
 
-class note: NotificationCenter, @unchecked Sendable {
+class note: NotificationCenter, ObservableObject, @unchecked Sendable {
+    @Published var view_sels: UUID?
+    @Published var view_scro: UUID?
+    @Published var view_sees: UUID?
+    @Published var view_tabl = [] as [mdat]
+    @Published var view_baup = [] as [mdat]
+    @Published var view_coad = [] as [mdat]
+    @Published var view_cobd = [] as [mdat]
+    @Published var view_cocd = [] as [mdat]
+    @Published var view_cobt = [] as [mdat]
+    @Published var view_coct = [] as [mdat]
+    @Published var view_shuf = [false, false] as [Bool]
+    @Published var view_refl = 0
+    @Published var view_opap = 0.00
+    @Published var view_prog = 0.00 as CGFloat
+    @Published var view_rotf = 0
+    @Published var view_rota = 360.0
+    @Published var view_srch = ""
+    @Published var view_time = ["", ""]
+    @Published var view_tabb = tabs.bind()
+    @Published var view_srts = [] as [KeyPathComparator<mdat>]
+    @Published var view_slir = [true, false, false]
+    @Published var view_srtz: String = "band:forward"
 
     @AppStorage("ClassBook")
     var book: Data?
@@ -270,7 +817,7 @@ class note: NotificationCenter, @unchecked Sendable {
     var view: ContentView?
     let lock = NSLock()
     let quel = NSLock()
-    var ldat = Date(timeIntervalSince1970:0)
+    var ldat = 1970.date()
     var inil = [] as [String]
     var coaa = [] as [String]
     var coab = [] as [mdat]
@@ -278,32 +825,32 @@ class note: NotificationCenter, @unchecked Sendable {
     var cobb = [] as [mdat]
     var coca = [] as [String]
     var cocb = [] as [mdat]
+    var taba = [] as [mdat]
     var tabp = [] as [mdat]
     var tabt = [] as [mdat]
     var pobj: AVPlayerItem?
     var plyr = AVPlayer()
-    var sele: mdat?
-    var save: mdat?
-    var selx: UUID?
+    var save = [] as [mdat?]
     var stal = true
+    var popu = true
     var outp = ""
     var flag = 0
     var stat = 0
     var load = 0
     var loas = 0
     var last = 0
+    var plen = 0
     var indx = -1
 
     required override init() {
         print(Date(),"DEBUG","init")
     }
 
-    func main(objc:ContentView) {
+    func main() {
         let lets = "0123456789ACBDEF"
         let rnds = String((0..<8).map{ _ in lets.randomElement()! })
         if (inil.isEmpty) {
             inil.append(rnds)
-            view = objc
             print(Date(),"DEBUG","rand",rnds)
             DispatchQueue.global(qos:.background).async { self.loop() }
         }
@@ -314,11 +861,18 @@ class note: NotificationCenter, @unchecked Sendable {
     }
 
     func sync(inpt:[mdat]) {
+        var news = -1
+        if (indx > -1) {
+            var iidx = 0
+            for item in inpt {
+                if (item.id == tabp[indx].id) {
+                    news = iidx
+                }
+                iidx += 1
+            }
+        }
         tabp = inpt
-    }
-
-    func xfer(inpt:UUID?) {
-        if (inpt != nil) { selx = inpt! }
+        indx = news
     }
 
     func mkda() -> Data {
@@ -326,15 +880,26 @@ class note: NotificationCenter, @unchecked Sendable {
     }
 
     func geth() -> mdat? {
-        if ((-1 < indx) && (indx < tabp.count)) {
-            return tabp[indx]
+        if (tabp.count > 0) {
+            if ((-1 < indx) && (indx < tabp.count)) {
+                return tabp[indx]
+            }
         }
+        indx = -1
         return nil
     }
 
-    func getu(inpt:mdat?) -> UUID {
-        if (inpt != nil) { return inpt!.id }
-        return UUID()
+    func getx() -> [mdat?] {
+        var outp = [geth(), nil, nil]
+        for item in tabp {
+            if ((view_sels != nil) && (item.id == view_sels!)) {
+                outp[1] = item
+            }
+            if ((view_scro != nil) && (item.id == view_scro!)) {
+                outp[2] = item
+            }
+        }
+        return outp
     }
 
     func divs(a:Int64, b:Int64) -> Int64 {
@@ -359,24 +924,6 @@ class note: NotificationCenter, @unchecked Sendable {
         }
     }
 
-    func exec(_ comd: String) throws -> String {
-        let task = Process()
-        let pipe = Pipe()
-
-        task.standardOutput = pipe
-        task.standardError = pipe
-        task.arguments = ["-c", comd]
-        task.executableURL = URL(fileURLWithPath:"/bin/bash")
-        task.standardInput = nil
-
-        try task.run()
-
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        let temp = String(data:data, encoding:.utf8)!
-
-        return temp
-    }
-
     func gets() -> Int {
         if ((stat == 1) || (stat == 9)) {
             if (plyr.timeControlStatus != AVPlayer.TimeControlStatus.playing) {
@@ -388,12 +935,12 @@ class note: NotificationCenter, @unchecked Sendable {
         return stat
     }
 
-    func make(path:String, song:String, band:String, albm:String, genr:String, year:String, tstr:String, null:String, dobj:Date, time:Int64) -> mdat {
+    func make(path:String, song:String, band:String, albm:String, genr:String, year:String, tstr:String, covr:String, null:String, dobj:Date, time:Int64) -> mdat {
         let form = DateFormatter()
         form.dateFormat = "yyyy/MM/dd HH:mm:ss"
         let date = form.string(from:dobj)
         let hash = "song:\(song), band:\(band), albm:\(albm), genr:\(genr), year:\(year), time:\(tstr), date:\(date), path:\(path)"
-        return mdat(path:path, song:song, band:band, albm:albm, genr:genr, year:year, tstr:tstr, date:date, null:null, hash:hash, dobj:dobj, time:time)
+        return mdat(path:path, song:song, band:band, albm:albm, genr:genr, year:year, tstr:tstr, date:date, covr:covr, null:null, hash:hash, dobj:dobj, time:time)
     }
 
     func gens(inpt:String) -> [KeyPathComparator<mdat>] {
@@ -409,26 +956,6 @@ class note: NotificationCenter, @unchecked Sendable {
     }
 
     func loop() {
-        let objc = view!
-        let opap = \ContentView.opap
-        let prog = \ContentView.prog
-        let time = \ContentView.time
-        let tabl = \ContentView.tabl
-        let baup = \ContentView.baup
-        let hold = \ContentView.hold
-        let sels = \ContentView.sels
-        let srch = \ContentView.srch
-        let srts = \ContentView.srts
-        let srtz = \ContentView.srtz
-        let slir = \ContentView.slir
-        let xfru = \ContentView.xfru
-        let rotf = \ContentView.rotf
-        let rota = \ContentView.rota
-        let coad = \ContentView.coad
-        let cobd = \ContentView.cobd
-        let cocd = \ContentView.cocd
-        let cobt = \ContentView.cobt
-        let coct = \ContentView.coct
         var csec = Int64(0)
         var cstr = form(inpt:csec)
         var tsec = Int64(0)
@@ -437,67 +964,88 @@ class note: NotificationCenter, @unchecked Sendable {
         var seek = 0
         var menl = 0
         while (0 == 0) {
-            let secs = Int(Date().timeIntervalSince1970)
+            let secs = 1970.time()
             if ((secs - load) >= (15 * 60)) {
                 load = secs
                 flag = 0
                 loas = 1
                 outp = ""
-                save = geth()
-                objc[keyPath:opap] = 1.00
+                save = getx()
+                DispatchQueue.main.sync { self.view_opap = 0.99 }
                 DispatchQueue.global(qos:.background).async { self.proc() }
             }
             let chks = gets()
-            if (chks > 0) { objc[keyPath:slir][0] = false }
-            else { objc[keyPath:slir][0] = true }
-            if ((chks == 1) && (objc[keyPath:rotf] != 1)) { objc[keyPath:rota] = 0.0 ; objc[keyPath:rotf] = 1 }
-            else if ((chks != 1) && (objc[keyPath:rotf] != 0)) { objc[keyPath:rota] = 360.0 ; objc[keyPath:rotf] = 0 }
+            if (chks > 0) { DispatchQueue.main.sync { self.view_slir[0] = false } }
+            else { DispatchQueue.main.sync { self.view_slir[0] = true } }
+            if ((chks == 1) && (view_rotf != 1)) {
+                DispatchQueue.main.sync {
+                    self.view_rota = 0.0 ; self.view_rotf = 1
+                }
+            } else if ((chks != 1) && (view_rotf != 0)) {
+                DispatchQueue.main.sync {
+                    self.view_rota = 360.0 ; self.view_rotf = 0
+                }
+            }
             if ((stat == 1) && (chks < 0)) {
                 let _ = next(iidx:1, over:1)
             }
-            if ((stat == 1) && (chks == 1)) {
+            let hobj = geth()
+            if ((indx > -1) && (hobj != nil)) {
                 let cobj = plyr.currentTime()
                 csec = divs(a:Int64(cobj.value), b:Int64(cobj.timescale))
-                let hobj = geth()
-                if (hobj != nil) { tsec = hobj!.time }
+                tsec = hobj!.time
                 if (tsec < 1) { tsec = 1 }
             }
             if (tsec > 1) {
                 if (pobj == nil) { csec = 0 }
-                if (objc[keyPath:slir][2]) {
-                    objc[keyPath:slir][2] = false
+                if (view_slir[2]) {
+                    DispatchQueue.main.sync { self.view_slir[2] = false }
                     seek = 1
                 }
-                if (objc[keyPath:slir][1] || (seek != 0)) {
+                if (view_slir[1] || (seek != 0)) {
                     seek = 1
-                    psec = (Double(objc[keyPath:prog]) * Double(tsec))
+                    psec = (Double(view_prog) * Double(tsec))
                     csec = Int64(psec)
                     cstr = form(inpt:csec)
-                    objc[keyPath:time][0] = cstr
-                    if (!objc[keyPath:slir][1]) {
+                    DispatchQueue.main.sync { self.view_time[0] = cstr }
+                    if (!view_slir[1]) {
                         if (csec >= 0) {
                             plyr.seek(to:CMTime(seconds:Double(csec), preferredTimescale:CMTimeScale(1)))
                         }
                         seek = 0
                     }
-                } else if (objc[keyPath:prog] <= 1.0) {
+                } else if (view_prog <= 1.0) {
                     cstr = form(inpt:csec)
                     tstr = form(inpt:tsec)
                     psec = (Double(csec) / Double(tsec))
-                    objc[keyPath:prog] = psec
-                    objc[keyPath:time][0] = cstr
-                    objc[keyPath:time][1] = tstr
+                    if (cstr != view_time[0]) {
+                        DispatchQueue.main.sync {
+                            self.view_prog = psec
+                            self.view_time[0] = cstr
+                            self.view_time[1] = tstr
+                        }
+                    }
+                }
+            }
+            let sobj = view_sees
+            if (hobj == nil) {
+                if (sobj != nil) {
+                    DispatchQueue.main.sync { self.view_sees = nil }
+                }
+            } else {
+                if ((sobj == nil) || (sobj! != hobj!.id)) {
+                    DispatchQueue.main.sync { self.view_sees = hobj!.id }
                 }
             }
             let numt = tabt.count
             let numb = tabp.count
-            let nump = objc[keyPath:baup].count
-            let numq = objc[keyPath:tabl].count
+            let nump = view_baup.count
+            let numq = view_tabl.count
             if ((numt > 0) && (loas == 2)) {
                 if ((secs - last) >= 3) {
                     let nils = "---"
-                    let dumb = make(path:nils, song:nils, band:nils, albm:nils, genr:nils, year:nils, tstr:nils, null:nils, dobj:Date(), time:0)
-                    let gsrt = gens(inpt:objc[keyPath:srtz])
+                    let dumb = make(path:nils, song:nils, band:nils, albm:nils, genr:nils, year:nils, tstr:nils, covr:nils, null:nils, dobj:Date(), time:0)
+                    let gsrt = gens(inpt:view_srtz)
                     if (flag == 1) {
                         lock.withLock {
                             print(Date(),"DEBUG","xfer",numt,numb,nump,numq,ldat)
@@ -506,23 +1054,22 @@ class note: NotificationCenter, @unchecked Sendable {
                             coaa = [nils] ; coab = [dumb]
                             coba = [nils] ; cobb = [dumb]
                             coca = [nils] ; cocb = [dumb]
-                            objc[keyPath:srts] = gsrt
-                            objc[keyPath:baup] = tabp
-                            if (objc[keyPath:srch] == "") {
-                                objc[keyPath:tabl] = objc[keyPath:baup]
-                            }
+                            var sels = [nil, nil, nil] as [UUID?]
                             var iidx = 0
                             for item in tabp {
-                                if (sele != nil) {
-                                    if (item.hash == sele!.hash) {
-                                        objc[keyPath:sels].removeAll()
-                                        objc[keyPath:sels].insert(item.id)
+                                if (save[0] != nil) {
+                                    if (item.hash == save[0]!.hash) {
+                                        indx = iidx ; sels[0] = item.id
                                     }
                                 }
-                                if (save != nil) {
-                                    if (item.hash == save!.hash) {
-                                        indx = iidx
-                                        objc[keyPath:xfru] = item.id
+                                if (save[1] != nil) {
+                                    if (item.hash == save[1]!.hash) {
+                                        sels[1] = item.id
+                                    }
+                                }
+                                if (save[2] != nil) {
+                                    if (item.hash == save[2]!.hash) {
+                                        sels[2] = item.id
                                     }
                                 }
                                 if (!(coaa.contains(item.band))) { coaa.append(item.band) ; coab.append(item) }
@@ -533,33 +1080,41 @@ class note: NotificationCenter, @unchecked Sendable {
                             coab.sort(using:gens(inpt:"band"))
                             cobb.sort(using:gens(inpt:"albm"))
                             cocb.sort(using:gens(inpt:"genr"))
-                            objc[keyPath:coad] = coab
-                            objc[keyPath:cobd] = cobb
-                            objc[keyPath:cocd] = cocb
-                            objc[keyPath:cobt] = cobb
-                            objc[keyPath:coct] = cocb
+                            DispatchQueue.main.async {
+                                self.view_srts = gsrt
+                                self.view_baup = self.tabp
+                                if (self.view_srch == "") {
+                                    self.view_tabl = self.view_baup
+                                }
+                                if (sels[0] != nil) {
+                                    self.view_sees = sels[0]
+                                }
+                                if (sels[1] != nil) {
+                                    self.view_sels = sels[1]
+                                }
+                                if (sels[2] != nil) {
+                                    self.view_scro = sels[2]
+                                    self.view_tabb.iscr += 1
+                                }
+                                self.view_coad = self.coab
+                                self.view_cobd = self.cobb
+                                self.view_cocd = self.cocb
+                                self.view_cobt = self.cobb
+                                self.view_coct = self.cocb
+                                self.view_refl += 1
+                            }
                         }
                     }
-                    tabt.removeAll()
-                    objc[keyPath:opap] = 0.00
+                    quel.withLock {
+                        tabt.removeAll()
+                    }
+                    DispatchQueue.main.sync { self.view_opap = 0.00 }
                     loas = 3
                     last = secs
                 }
             }
-            if (getu(inpt:geth()) != getu(inpt:objc[keyPath:hold])) {
-                objc[keyPath:hold] = geth()
-            }
-            if (selx != nil) {
-                if ((sele == nil) || (sele!.id != selx!)) {
-                    for item in tabp {
-                        if (item.id == selx!) {
-                            sele = item
-                        }
-                    }
-                }
-            }
             if ((secs - menl) >= 3) {
-                DispatchQueue.main.async {
+                DispatchQueue.main.asyncAfter(deadline:.now() + 0.0) {
                     if let wind = NSApp.windows.first {
                         wind.backgroundColor = NSColor(Color.clear)
                     }
@@ -569,16 +1124,6 @@ class note: NotificationCenter, @unchecked Sendable {
                         if let item {
                             menu?.removeItem(item)
                         }
-                        let meni = NSMenuItem(title:"Load", action:#selector(self.refr(_:)), keyEquivalent:"")
-                        meni.isEnabled = true
-                        meni.target = self
-                        let mend = NSMenuItem(title:"Data", action:nil, keyEquivalent:"")
-                        mend.isEnabled = true
-                        mend.target = self
-                        mend.submenu = NSMenu(title:"Data")
-                        mend.submenu?.autoenablesItems = true
-                        mend.submenu?.addItem(meni)
-                        menu?.addItem(mend)
                         let menw = NSMenuItem(title:"Window", action:#selector(self.wdow(_:)), keyEquivalent:"")
                         menw.isEnabled = true
                         menw.target = self
@@ -589,12 +1134,26 @@ class note: NotificationCenter, @unchecked Sendable {
                         menf.submenu?.autoenablesItems = true
                         menf.submenu?.addItem(menw)
                         menu?.insertItem(menf, at:1)
+                        let mens = NSMenuItem(title:"Select", action:#selector(self.refs(_:)), keyEquivalent:"")
+                        mens.isEnabled = true
+                        mens.target = self
+                        let menr = NSMenuItem(title:"Reload", action:#selector(self.refr(_:)), keyEquivalent:"")
+                        menr.isEnabled = true
+                        menr.target = self
+                        let mend = NSMenuItem(title:"Data", action:nil, keyEquivalent:"")
+                        mend.isEnabled = true
+                        mend.target = self
+                        mend.submenu = NSMenu(title:"Data")
+                        mend.submenu?.autoenablesItems = true
+                        mend.submenu?.addItem(mens)
+                        mend.submenu?.addItem(menr)
+                        menu?.addItem(mend)
                     }
                 }
                 menl = secs
             }
             print(Date(),"DEBUG","loop",inil,cstr,tstr,psec,stat,chks,indx,load,numt,numb,nump,numq)
-            usleep(450000)
+            usleep(357000)
         }
     }
 
@@ -606,7 +1165,7 @@ class note: NotificationCenter, @unchecked Sendable {
                 if (item.path == mobj!.path) {
                     iidx = iter
                 }
-                iter = (iter + 1)
+                iter += 1
             }
             if (iidx > -1) { indx = iidx }
             if (mods(path:mobj!.path, back:"") == nil) { iidx = -8 }
@@ -625,44 +1184,42 @@ class note: NotificationCenter, @unchecked Sendable {
         return gets()
     }
 
-    func stop() {
+    func stop() -> Int {
         if (gets() == 1) {
             plyr.pause()
             stat = 2
         }
+        return 0
     }
 
-    func halt(high:Int) {
-        stop()
+    func halt() {
+        let _ = stop()
         pobj = nil
         stat = 0
     }
 
     func next(iidx:Int, over:Int) -> Int {
-        let objc = view!
-        let tabl = \ContentView.tabl
-        let shuf = \ContentView.shuf
         var jidx = 0
         var zidx = iidx
         var chks = gets()
         let pres = geth()
-        let leng = objc[keyPath:tabl].count
-        halt(high:0)
+        let leng = view_tabl.count
+        halt()
         if (tabp.count < 1) { return -1 }
         if (leng < 1) { return -2 }
         if (pres != nil) {
             var i = 0
-            for item in objc[keyPath:tabl] {
+            for item in view_tabl {
                 if (item.hash == pres!.hash) { jidx = i }
                 i = (i + 1)
             }
         }
-        if (objc[keyPath:shuf][0] || objc[keyPath:shuf][1]) { zidx = Int.random(in:1..<leng) }
+        if (view_shuf[0] || view_shuf[1]) { zidx = Int.random(in:1..<leng) }
         jidx = (jidx + zidx)
         if (jidx < 0) { jidx = (leng - 1) }
         jidx = (jidx % leng)
         if (over == 1) { chks = over }
-        let _ = play(mobj:objc[keyPath:tabl][jidx], over:chks)
+        let _ = play(mobj:view_tabl[jidx], over:chks)
         return gets()
     }
 
@@ -693,24 +1250,27 @@ class note: NotificationCenter, @unchecked Sendable {
             if ((burl == nil) || (book == nil) || (stal == true) || (slee == 1)) {
                 slee = 2
                 book = nil
-                DispatchQueue.main.async {
-                    let opan = NSOpenPanel()
-                    opan.allowsMultipleSelection = false
-                    opan.canChooseDirectories = true
-                    opan.canCreateDirectories = false
-                    opan.canChooseFiles = false
-                    let chek = opan.runModal()
-                    if (chek == NSApplication.ModalResponse.OK) {
-                        let curl = opan.url!
-                        print(Date(),"DEBUG","open",curl)
-                        do {
-                            self.book = try curl.bookmarkData(
-                                options:.withSecurityScope,
-                                includingResourceValuesForKeys:nil,
-                                relativeTo:nil
-                            )
-                        } catch {
-                            /* no-op */
+                if (popu) {
+                    popu = false
+                    DispatchQueue.main.asyncAfter(deadline:.now() + 0.0) {
+                        let opan = NSOpenPanel()
+                        opan.allowsMultipleSelection = false
+                        opan.canChooseDirectories = true
+                        opan.canCreateDirectories = false
+                        opan.canChooseFiles = false
+                        let chek = opan.runModal()
+                        if (chek == NSApplication.ModalResponse.OK) {
+                            let curl = opan.url!
+                            print(Date(),"DEBUG","open",curl)
+                            do {
+                                self.book = try curl.bookmarkData(
+                                    options:.withSecurityScope,
+                                    includingResourceValuesForKeys:nil,
+                                    relativeTo:nil
+                                )
+                            } catch {
+                                /* no-op */
+                            }
                         }
                     }
                 }
@@ -718,34 +1278,61 @@ class note: NotificationCenter, @unchecked Sendable {
             burl = chkb()
             if (burl != nil) {
                 if (burl!.startAccessingSecurityScopedResource()) {
-                    //let fold = (NSString(string:"~").expandingTildeInPath + "/Music")
-                    let fold = burl!.relativePath
-                    let path = String(format:"find '%@/' -type f 2>&1 | grep -Ei '(mp3|m4a)$'", fold)
+                    let fold = burl!.relativePath //NSString(string:"~").expandingTildeInPath
+                    let mune = FileManager.default.enumerator(atPath:fold) //let cmdl = String(format:"find '%@/' -type f 2>&1 | grep -Ei '(mp3|m4a)$'", fold)
                     print(Date(),"DEBUG","list",load,fold)
-                    if let temp = try? exec(path) {
+                    var temp = ""
+                    while let elem = mune?.nextObject() as? String {
+                        let fstr = elem.lowercased()
+                        if (fstr.hasSuffix(".mp3") || fstr.hasSuffix(".m4a")) {
+                            temp += (fold + "/" + elem + "\n")
+                        }
+                    }
+                    if (temp != "") { //if let temp = try? exec(cmdl) {
+                        var relo = 0
                         outp = temp.trimmingCharacters(in:.whitespaces)
                         if (outp != "") {
-                            var iidx = 0
-                            let mtmp = make(path:"", song:"", band:"", albm:"", genr:"", year:"", tstr:"", null:"", dobj:Date(), time:0)
+                            let mtmp = make(path:"", song:"", band:"", albm:"", genr:"", year:"", tstr:"", covr:"", null:"", dobj:Date(), time:0)
                             let list = outp.components(separatedBy:"\n").filter { !$0.isEmpty }
-                            tabt.removeAll()
-                            for _ in list { tabt.append(mtmp) }
+                            taba.removeAll()
+                            for _ in list { taba.append(mtmp) }
+                            var iidx = 0
                             for line in list {
                                 meta(iidx:iidx, path:line)
-                                iidx = (iidx + 1)
+                                iidx += 1
                             }
-                            iidx = 0
-                            while (iidx < list.count) {
-                                usleep(650000)
+                            var lidx = 0
+                            var lnum = 0
+                            let mnum = 9
+                            plen = 0
+                            while ((plen < list.count) && (lnum < mnum)) {
+                                usleep(753000)
                                 quel.withLock {
-                                    while (tabt[iidx].path != "") {
-                                        if (tabt[iidx].dobj > ldat) { ldat = tabt[iidx].dobj ; flag = 1 }
-                                        iidx += 1
-                                        if (iidx >= list.count) { break }
+                                    while ((plen < list.count) && (taba[plen].path != "")) {
+                                        if (taba[plen].dobj > ldat) {
+                                            ldat = taba[plen].dobj
+                                            relo = 1
+                                        }
+                                        plen += 1
                                     }
                                 }
-                                print(Date(),"DEBUG","wait",iidx,list.count)
+                                if (plen == lidx) { lnum += 1 }
+                                else { lnum = 0 }
+                                lidx = plen
+                                print(Date(),"DEBUG","wait",plen,lidx,list.count,lnum)
                             }
+                            quel.withLock {
+                                tabt.removeAll()
+                                for item in taba {
+                                    if (item.path != "") {
+                                        tabt.append(item)
+                                    }
+                                }
+                                if (tabt.count != tabp.count) {
+                                    relo = 1
+                                }
+                            }
+                            if (relo == 1) { flag = 1 }
                         }
                     }
                     burl!.stopAccessingSecurityScopedResource()
@@ -764,6 +1351,12 @@ class note: NotificationCenter, @unchecked Sendable {
             var item = (inpt[i][0] as? NSString) as String? ?? ""
             if (item == "") { item = "---" }
             info.append([item, inpt[i][1]])
+            if (i == 5) {
+                let covr = (inpt[i][1] as? NSData) as Data? ?? mkda()
+                if (covr.count > 0) {
+                    info[i][0] = covr.base64EncodedString()
+                }
+            }
             i = (i + 1)
         }
         let temp = mkda()
@@ -777,46 +1370,45 @@ class note: NotificationCenter, @unchecked Sendable {
     }
 
     func meta(iidx:Int, path:String) {
+        let nils = "---"
         let purl = URL(fileURLWithPath:path)
         let aset = AVURLAsset(url:purl)
         Task {
-            let maps = [[0, "©nam"], [1, "©ART"], [2, "©alb"], [3, "©gen"], [4, "©day"]]
-            var info = [["", mkda()], ["", mkda()], ["", mkda()], ["", mkda()], ["", mkda()]]
+            let maps = [["title", "©nam"], ["artist", "TPE2", "©ART"], ["albumName", "©alb"], ["type", "©gen"], ["TYE", "TYER", "TDRC", "©day"], ["PIC", "covr"]]
+            var info = [[nils, mkda()], [nils, mkda()], [nils, mkda()], [nils, mkda()], [nils, mkda()], [nils, mkda()]]
             let dobj = try await aset.load(.duration)
             let data = try await aset.load(.metadata)
             let itun = try await aset.loadMetadata(for:AVMetadataFormat.iTunesMetadata)
             for item in data {
                 if let name = item.commonKey?.rawValue, let vals = try await item.load(.value) {
-                    if (name == "title") {
-                        info[0][0] = vals
-                        info[0][1] = vals
-                    }
-                    if (name == "artist") {
-                        info[1][0] = vals
-                        info[1][1] = vals
-                    }
-                    if (name == "albumName") {
-                        info[2][0] = vals
-                        info[2][1] = vals
-                    }
-                    if (name == "type") {
-                        info[3][0] = vals
-                        info[3][1] = vals
+                    var i = 0
+                    for _ in maps {
+                        let z = info[i][0] as? String ?? nils
+                        if ((z == nils) && (maps[i].contains(name))) {
+                            info[i][0] = vals
+                            info[i][1] = vals
+                        }
+                        i += 1
                     }
                 } else if let name = item.key?.description, let vals = try await item.load(.value) {
-                    if (name == "TPE2") {
-                        info[1][0] = vals
-                        info[1][1] = vals
+                    var i = 0
+                    for _ in maps {
+                        let z = info[i][0] as? String ?? nils
+                        if ((z == nils) && (maps[i].contains(name))) {
+                            info[i][0] = vals
+                            info[i][1] = vals
+                        }
+                        i += 1
                     }
                 }
             }
             var minf = dats(inpt:info)
+            var i = 0
             for imap in maps {
-                let i = imap[0] as? Int ?? 0
-                let k = imap[1] as? String ?? ""
-                let z = minf[i][0] as? String
-                if (z == "---") {
-                    let item = AVMetadataItem.metadataItems(from:itun, withKey:k, keySpace:AVMetadataKeySpace.iTunes)
+                var z = minf[i][0] as? String ?? nils
+                var j = 0
+                while ((z == nils) && (j < imap.count)) {
+                    let item = AVMetadataItem.metadataItems(from:itun, withKey:imap[j], keySpace:AVMetadataKeySpace.iTunes)
                     if let name = item.first, let vals = try await name.load(.value) {
                         info[i][0] = vals
                         info[i][1] = vals
@@ -824,17 +1416,22 @@ class note: NotificationCenter, @unchecked Sendable {
                     let temp = dats(inpt:info)
                     minf[i][0] = temp[i][0]
                     minf[i][1] = temp[i][1]
+                    z = minf[i][0] as? String ?? nils
+                    j += 1
                 }
+                i += 1
             }
             let csec = divs(a:Int64(dobj.value), b:Int64(dobj.timescale))
             let tsec = form(inpt:csec)
-            let modd = mods(path:path, back:"---")
+            let modd = mods(path:path, back:nils)
             var dmod = Date()
             if (modd != nil) { dmod = modd! }
-            let temp = make(path:path, song:(minf[0][0] as! String), band:(minf[1][0] as! String), albm:(minf[2][0] as! String), genr:(minf[3][0] as! String), year:(minf[4][0] as! String), tstr:tsec, null:"*", dobj:dmod, time:csec)
+            let temp = make(path:path, song:(minf[0][0] as! String), band:(minf[1][0] as! String), albm:(minf[2][0] as! String), genr:(minf[3][0] as! String), year:(minf[4][0] as! String), tstr:tsec, covr:(minf[5][0] as! String), null:"*", dobj:dmod, time:csec)
             if (iidx > -1) {
                 quel.withLock {
-                    self.tabt[iidx] = temp
+                    if (iidx < self.taba.count) {
+                        self.taba[iidx] = temp
+                    }
                 }
             }
         }
@@ -844,15 +1441,27 @@ class note: NotificationCenter, @unchecked Sendable {
         return true
     }
 
+    @objc func refs(_ sender: Any) {
+        view_tabl.removeAll()
+        view_baup.removeAll()
+        view_refl += 1
+        tabp.removeAll()
+        tabt.removeAll()
+        book = nil
+        popu = true
+        self.halt()
+        self.refr(sender)
+    }
+
     @objc func refr(_ sender: Any) {
         if ((loas == 0) || (loas == 3)) {
-            ldat = Date(timeIntervalSince1970:0)
+            ldat = 1970.date()
             load = 0
         }
     }
 
     @objc func wdow(_ sender: Any) {
-        DispatchQueue.main.async {
+        DispatchQueue.main.asyncAfter(deadline:.now() + 0.0) {
             let wind = NSApplication.shared.windows
             if let main = wind.first {
                 if let savd = UserDefaults.standard.string(forKey:"WindowFrame") {
@@ -875,95 +1484,84 @@ struct ContentView: View {
         animation: .default)
     private var items: FetchedResults<Item>
 
-    @AppStorage("TableColumn")
-    var cols: TableColumnCustomization<mdat>
-
     @AppStorage("TableSort")
-    var srtz: String = "name"
+    var srtz: String = "band:forward"
 
     @AppStorage("TablePlaylist")
     var plst: [[String]] = []
 
-    @AppStorage("TableShop")
+    @AppStorage("ShowPans")
     var shwp = false
 
-    @AppStorage("TableShow")
-    var tsho: String = "no"
+    @AppStorage("ShowArtw")
+    var shwa = false
+
+    @AppStorage("ShowBtns")
+    var shwb = false
+
+    @AppStorage("ShowCols")
+    var shwc = false
+
+    @AppStorage("ShowMini")
+    var shwm = false
 
     @AppStorage("TableShof")
     var shuf = [false, false]
 
-    @AppStorage("ColorBase")
-    var cbno = [0.0, 0.0, 0.0, 0.0, 0.0]
-
-    @AppStorage("ColorHigh")
-    var chno = [0.0, 0.0, 0.0, 0.0, 0.0]
-
-    @AppStorage("ColorText")
-    var ctno = [0.0, 0.0, 0.0, 0.0, 0.0]
-
-    @AppStorage("ColorTint")
-    var cuno = [0.0, 0.0, 0.0, 0.0, 0.0]
-
-    @AppStorage("ColorView")
-    var cvno = [0.0, 0.0, 0.0, 0.0, 0.0]
-
     @AppStorage("ColorList")
-    var clno = [0.0, 0.0, 0.0, 0.0, 0.0]
+    var clno = [[0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0]]
 
-    @AppStorage("ColorBlur")
-    var crno = [0.0, 0.0, 0.0, 0.0, 0.0]
+    @AppStorage("ColorMode")
+    var mods = 0
 
-    @AppStorage("WindowSetting")
-    var wini = [97.0, 0.0, 0.19]
+    @AppStorage("WindowPref")
+    var wina = [0.0, 0.0, 0.19, 0.0]
+
+    @AppStorage("WindowSize")
+    var winz = [0, 0, 0, 0]
+
+    @AppStorage("WindowMini")
+    var wini = [0, 0, 0, 0]
 
     @AppStorage("PlayerVolume")
-    var volu = [1.00, 1.00, 1.00]
+    var volu = [1.00, 1.00, 1.00] as [CGFloat]
 
-    @FocusState private var isfo: Bool
+    @AppStorage("ColumnOrder")
+    var cord = tabs.bind.mcol().ordr
+
+    @AppStorage("ColumnSize")
+    var csiz = tabs.bind.mcol().sizs
+
+    @AppStorage("ColumnHist")
+    var chis = tabs.bind.mcol().hist
+
+    @AppStorage("RowStyle")
+    var rows = 0
+
+    @FocusState var isfo: Bool
 
     @State var clrs = [""].genr(inpt:["b", "g", "b", "!", "", ""], size:1000)
-    @State var idxs = [1 /*play*/, 3 /*shuf*/, 4 /*show*/, 50 /*filt*/, 51 /*list*/, 55 /*stat*/, 75 /*volu*/, 99 /*icon*/]
+    @State var idxs = [99 /*icon*/, 97 /*stat*/, 95 /*filt*/, 93 /*list*/, 4 /*plst*/, 1 /*play*/]
+    @State var idxf = [] as [[Any]]
 
     @State var imgl = 0
-    @State var imgd: Image?
-    @State var winl = [Color.clear, Material.ultraThin, Material.thin, Material.regular, Material.thick, Material.ultraThick]
     @State var wins = 0
     @State var winc = Color.clear
+    @State var winl = [Color.clear, Material.ultraThin, Material.thin, Material.regular, Material.thick, Material.ultraThick]
     @State var sldr = [Color.clear, Color.clear, Color.clear, Color.clear]
     @State var sldv = [Color.clear, Color.clear, Color.clear, Color.clear]
-    @State var cbco = Color.clear
-    @State var chco = Color.clear
-    @State var ctco = Color.clear
-    @State var cuco = Color.clear
-    @State var cvco = Color.clear
-    @State var clco = Color.clear
-    @State var crco = Color.clear
+    @State var clco = [Color.clear, Color.clear, Color.clear, Color.clear, Color.clear, Color.clear, Color.clear, Color.clear]
     @State var bldr = [["band"], ["albm"], ["genr"], ["year"]]
-    @State var time = ["00:00", "00:00"]
     @State var mode = "play.circle"
-    @State var prog = 0.00
-    @State var opap = 0.00
-    @State var rotf = 0
-    @State var rota = 360.0
+    @State var keyz = 0
     @State var shws = false
     @State var fals = true
-    @State var mute = true
-    @State var slir = [true, false, false]
+    @State var mute = false
     @State var sliv = [false, false, false]
-    @State var srch = ""
     @State var name = ""
     @State var last = 0
-    @State var relo = [0, 0]
     @State var pidx = -1
-    @State var xfrs: UUID?
-    @State var xfru: UUID?
-    @State var sell: UUID?
-    @State var hold: mdat?
-    @State var tabl = [] as [mdat]
-    @State var baup = [] as [mdat]
-    @State var sels = Set<mdat.ID>()
-    @State var srts = [] as [KeyPathComparator<mdat>]
     @State var coad = [] as [mdat]
     @State var coas = Set<mdat.ID>()
     @State var cobd = [] as [mdat]
@@ -972,7 +1570,14 @@ struct ContentView: View {
     @State var cocd = [] as [mdat]
     @State var coct = [] as [mdat]
     @State var cocs = Set<mdat.ID>()
-    @State var nobj = note()
+    @State var styl = ["Light", "Dark"]
+    @State var rowl = ["rows", "line"]
+    @State var colu: KeyValuePairs = ["Track":\mdat.song, "Artist":\mdat.band, "Album":\mdat.albm, "Genre":\mdat.genr, "Year":\mdat.year, "Time":\mdat.tstr, "Date":\mdat.date]
+    @State var tabz: tabs?
+    @State var imgd: Image?
+    @State var refr = UUID()
+
+    @StateObject var nobj = note()
 
     var body: some View {
         let epad = 8.0
@@ -981,325 +1586,205 @@ struct ContentView: View {
         ZStack {
             VStack {
                 HStack {
+                    HStack {  }.padding(.leading, 4.0)
                     VStack {
-                        let offs = 1.99
+                        let spcr = 1.15
+                        let spcs = 0.75
+                        let spcv = 1.75
                         HStack {
-                            butv(kind:"arrow.left.circle", size:37.0, extr:[epad*1.15, 0.0], iidx:0, clst:["b", "g", "b", "!"], meth:-1, pram:-1, actn:prev)
-                            butv(kind:mode, size:45.0, extr:[epad*1.15, 0.0], iidx:idxs[0], clst:["b", "g", "b", "*"], meth:-1, pram:-1, actn:bply)
-                            butv(kind:"arrow.right.circle", size:37.0, extr:[epad*1.15, 0.0], iidx:2, clst:["b", "g", "b", "!"], meth:-1, pram:-1, actn:more)
-                        }.offset(x:0.00, y:-1.99+offs).overlay(
-                            butv(kind:"shuffle.circle", size:28.0, extr:[0.0, 0.0], iidx:idxs[1], clst:["b", "g", ((shuf[0] == false) && (shuf[1] == false)) ? "b" : "g", "*"], meth:-1, pram:-1, actn:shfs)
-                                .offset(x:103.99, y:-2.19+offs)
-                            )
+                            butv(kind:"backward.circle", size:27.0, extr:[epad*spcs, 0.0], iidx:21, clst:["b", "g", "b", "!"], pram:-1, actn:frev, actc:niln).offset(y:0.99)
+                            butv(kind:"backward.end.circle", size:37.0, extr:[epad*spcr, 0.0], iidx:0, clst:["b", "g", "b", "!"], pram:-1, actn:prev, actc:niln)
+                            butv(kind:plyi(), size:45.0, extr:[epad*spcr, 0.0], iidx:idxs[5], clst:["b", "g", "b", "~"], pram:-1, actn:bply, actc:plyz)
+                            butv(kind:"forward.end.circle", size:37.0, extr:[epad*spcr, 0.0], iidx:2, clst:["b", "g", "b", "!"], pram:-1, actn:more, actc:niln)
+                            butv(kind:"forward.circle", size:27.0, extr:[epad*spcs, 0.0], iidx:23, clst:["b", "g", "b", "!"], pram:-1, actn:ffwd, actc:niln).offset(y:0.99)
+                        }.offset(y:0.99)
                         HStack {  }.overlay(
                             HStack {
-                                let spcr = 1.75
-                                butv(kind:(mute == false) ? "speaker.circle" : "speaker.slash.circle", size:24.0, extr:[epad*spcr, 0.0], iidx:idxs[6], clst:["b", "g", "b", "~"], meth:-1, pram:-1, actn:minv)
-                                slid(locks:$sliv[0], edits:$sliv[1], moved:$sliv[2], value:$volu[0], colrg:$sldv[0], colrb:$sldv[1], highg:$sldv[2], highb:$sldv[3], fills:true).frame(width:155.0, height:11.0).offset(y:0.99).onAppear {
-                                    sldv = [colr(k:"b"), colr(k:"b"), colr(k:"bh"), colr(k:"bh")]
-                                }.onContinuousHover { phase in
-                                    switch phase {
-                                    case .active:
-                                        sldv = [colr(k:"bh"), colr(k:"bh"), colr(k:"bh"), colr(k:"bh")]
-                                    case .ended:
-                                        DispatchQueue.main.asyncAfter(deadline:.now() + 0.31) {
-                                            sldv = [colr(k:"b"), colr(k:"b"), colr(k:"bh"), colr(k:"bh")]
+                                butv(kind:muti(), size:24.0, extr:[epad*spcv, 0.0], iidx:75, clst:["b", "g", "b", "~"], pram:-1, actn:minv, actc:mutz)
+                                slid(locks:$sliv[0], edits:$sliv[1], moved:$sliv[2], value:$volu[0], colrg:$sldv[0], colrb:$sldv[1], highg:$sldv[2], highb:$sldv[3], fills:true).frame(width:160.0, height:11.0)
+                                    .offset(y:-0.09).onAppear {
+                                        sldv = [colr(k:"b"), colr(k:"b"), colr(k:"bh"), colr(k:"bh")]
+                                    }.onContinuousHover { phase in
+                                        switch phase {
+                                        case .active:
+                                            sldv = [colr(k:"bh"), colr(k:"bh"), colr(k:"bh"), colr(k:"bh")]
+                                        case .ended:
+                                            DispatchQueue.main.asyncAfter(deadline:.now() + 0.31) {
+                                                sldv = [colr(k:"b"), colr(k:"b"), colr(k:"bh"), colr(k:"bh")]
+                                            }
                                         }
+                                    }.onChange(of:volu[0]) {
+                                        volu[1] = volu[0]
+                                        if (volu[1] < 0.09) { volu[1] = 0.0 }
+                                        if (volu[1] > 0.95) { volu[1] = 1.0 }
+                                        nobj.plyr.volume = Float(volu[1])
                                     }
-                                }.onChange(of:volu[0]) {
-                                    volu[1] = volu[0]
-                                    if (volu[1] < 0.09) { volu[1] = 0.0 }
-                                    if (volu[1] > 0.95) { volu[1] = 1.0 }
-                                    nobj.plyr.volume = Float(volu[1])
-                                }
-                                butv(kind:"speaker.wave.2.circle", size:24.0, extr:[epad*spcr, 0.0], iidx:77, clst:["b", "g", "b", "!"], meth:-1, pram:-1, actn:maxv)
-                            }.frame(width:1.0, height:1.0).offset(x:0.00, y:21.00-offs)
+                                butv(kind:"speaker.wave.2.circle", size:24.0, extr:[epad*spcv, 0.0], iidx:77, clst:["b", "g", "b", "!"], pram:-1, actn:maxv, actc:niln)
+                            }.frame(width:1.0, height:1.0).padding(.top, 1.0).offset(x:0.00, y:19.69)
                         )
-                    }.frame(width:250.0).offset(x:15.99, y:-15.99)
-                    HStack {  }.padding(.leading, 28.0)
+                    }.frame(width:250.0).padding(.top, 0.99).offset(x:15.99, y:-15.99)
+                    HStack {  }.padding(.leading, 32.0)
                     HStack {
+                        if (shwm == false) { Spacer(minLength:0.0) }
                         ZStack {
-                            let iidx = idxs[5]
-                            RoundedRectangle(cornerRadius:19.0).fill(colr(k:"z")).frame(width:ssiz[0], height:ssiz[1]).overlay(ZStack {
-                                RoundedRectangle(cornerRadius:21.0).stroke(colr(k:clrs[iidx][2]), lineWidth:3.9).opacity(0.91).frame(width:ssiz[0]+3.9, height:ssiz[1]+3.9)
+                            VStack {
                                 VStack {
-                                    txtv(strs:gets(kind:0), size:17.0, colr:colr(k:"t"), kind:0, bold:0).offset(y:-5.99).frame(width:ssiz[0]*0.89)
-                                    txtv(strs:gets(kind:1), size:15.0, colr:colr(k:"t"), kind:0, bold:0).offset(y:-0.99).frame(width:ssiz[0]*0.75)
-                                    HStack {
-                                        txtv(strs:time[0], size:13.0, colr:colr(k:"t"), kind:1, bold:1).padding(.trailing, 8.0).offset(y:0.09)
-                                        slid(locks:$slir[0], edits:$slir[1], moved:$slir[2], value:$prog, colrg:$sldr[0], colrb:$sldr[1], highg:$sldr[2], highb:$sldr[3], fills:false).frame(width:ssiz[0]*0.50, height:13.0).offset(y:-0.99).onAppear {
-                                            sldr = [colr(k:"t"), colr(k:"b"), colr(k:"th"), colr(k:"bh")]
-                                        }
-                                        txtv(strs:time[1], size:13.0, colr:colr(k:"t"), kind:1, bold:1).padding(.leading, 8.0).offset(y:0.09)
-                                    }.offset(y:0.99)
+                                    txtv(strs:gets(kind:0), size:17.0, colr:colr(k:"t"), kind:0, bold:0).offset(y:-5.99).frame(width:ssiz[0]*0.89).offset(y:0.03)
+                                    txtv(strs:gets(kind:1), size:15.0, colr:colr(k:"t"), kind:0, bold:0).offset(y:-0.99).frame(width:ssiz[0]*0.75).offset(y:0.69)
                                 }.offset(y:0.99)
-                                })
-                        }.onContinuousHover { phase in
-                            switch phase {
-                            case .active:
-                                sldr = [colr(k:"th"), colr(k:"bh"), colr(k:"th"), colr(k:"bh")]
-                            case .ended:
-                                DispatchQueue.main.asyncAfter(deadline:.now() + 0.39) {
-                                    sldr = [colr(k:"t"), colr(k:"b"), colr(k:"th"), colr(k:"bh")]
-                                }
+                                HStack {
+                                    Color.clear.frame(width:1.0, height:1.0).contentShape(Rectangle()).overlay(ZStack {
+                                        Circle().inset(by:-1.09).fill(colr(k:"z").opacity(0.93)).brightness(-0.39*1.09)
+                                        butv(kind:"shuffle.circle", size:25.0, extr:[0.0, 0.0], iidx:3, clst:["b", "g", "b", "~"], pram:-1, actn:shfs, actc:shfz)
+                                            .brightness(0.09*1.39)
+                                            .onChange(of:nobj.view_shuf) {
+                                                shuf = nobj.view_shuf
+                                            }
+                                    }.offset(x:19.99, y:-0.99))
+                                    Spacer()
+                                    txtv(strs:nobj.view_time[0], size:13.0, colr:colr(k:"t"), kind:1, bold:1).padding(.trailing, 8.0).offset(y:0.09)
+                                    slid(locks:$nobj.view_slir[0], edits:$nobj.view_slir[1], moved:$nobj.view_slir[2], value:$nobj.view_prog, colrg:$sldr[0], colrb:$sldr[1], highg:$sldr[2], highb:$sldr[3], fills:false).frame(width:ssiz[0]*0.50, height:13.0).offset(y:-0.99).onAppear {
+                                        sldr = [colr(k:"t"), colr(k:"b"), colr(k:"th"), colr(k:"bh")]
+                                    }
+                                    txtv(strs:nobj.view_time[1], size:13.0, colr:colr(k:"t"), kind:1, bold:1).padding(.leading, 8.0).offset(y:0.09)
+                                    Spacer()
+                                    Color.clear.frame(width:1.0, height:1.0).contentShape(Rectangle()).overlay(ZStack {
+                                        Circle().inset(by:-1.09).fill(colr(k:"z").opacity(0.93)).brightness(-0.39*1.09)
+                                        butv(kind:"rectangle.fill.on.rectangle.fill.circle", size:25.0, extr:[0.0, 0.0], iidx:87, clst:["b", "g", "b", "~"], pram:-1, actn:shms, actc:shmz)
+                                            .brightness(0.09*1.39)
+                                    }.offset(x:-19.99, y:-0.99))
+                                }.offset(y:3.09)
                             }
-                        }
-                    }.frame(maxWidth:.infinity).frame(height:16.0).onTapGesture {
+                        }.frame(width:ssiz[0], height:ssiz[1])
+                            .background() { ZStack {
+                                    let radi = 17.00
+                                    let iidx = idxs[1]
+                                    let kclr = clrs[iidx][2]
+                                    RoundedRectangle(cornerRadius:radi).inset(by:-0.99).fill(colr(k:"z"))
+                                    RoundedRectangle(cornerRadius:radi).inset(by:-3.99).stroke(colr(k:kclr), lineWidth:3.99).opacity(0.91)
+                            } }.onContinuousHover { phase in
+                                switch phase {
+                                case .active:
+                                    sldr = [colr(k:"th"), colr(k:"bh"), colr(k:"th"), colr(k:"bh")]
+                                case .ended:
+                                    DispatchQueue.main.asyncAfter(deadline:.now() + 0.39) {
+                                        sldr = [colr(k:"t"), colr(k:"b"), colr(k:"th"), colr(k:"bh")]
+                                    }
+                                }
+                            }.gesture(WindowDragGesture())
+                        Spacer(minLength:0.0)
+                    }.frame(height:16.0).onTapGesture {
                         isfo = true
+                        nobj.view_tabb.isfo += 1
                     }
-                    HStack {  }.padding(.leading, 21.0)
-                    VStack {
-                        let offs = 3.99
-                        HStack {
-                            let iidx = idxs[3]
-                            TextField("Filter", text:$srch).disabled(fals).onAppear { DispatchQueue.main.async { fals = false } }
-                                .onChange(of:srch) { olds, vals in
-                                    last = Int(Date().timeIntervalSince1970)
-                                    filt()
-                                }
-                                .frame(width:160.0)
-                                .showClearButton($srch)
-                                .foregroundColor(colr(k:"t"))
-                                .disableAutocorrection(true)
-                                .textFieldStyle(.plain)
-                                .font(Font.custom("Menlo", size:15.0).weight(.bold))
-                                .padding(EdgeInsets(top:1.5, leading:12.0, bottom:1.5, trailing:24.0))
-                                .overlay(RoundedRectangle(cornerRadius:13.0).inset(by:-5.0).stroke(colr(k:clrs[iidx][2]), lineWidth:3.0))
-                                .offset(x:3.99)
-                            butv(kind:funp(iidx:4), size:30.0, extr:[0.0, 0.0], iidx:4, clst:["b", "g", (shwp == false) ? "b" : "g", "~"], meth:-1, pram:-1, actn:clkp).offset(x:12.0).overlay(
-                                butv(kind:"multiply.circle", size:26.0, extr:[0.0, 0.0], iidx:5, clst:["b", "g", "b", "!"], meth:3, pram:3, actn:nill)
-                                    .padding(.trailing, 1.0).padding(.top, 1.0).offset(x:13.00, y:41.00-offs))
-                        }.offset(x:0.09, y:-1.99+offs)
-                        HStack {  }.overlay(
-                            HStack {
-                                let spcr = 1.55
-                                butv(kind:"star.circle", size:26.0, extr:[epad*spcr, 0.0], iidx:6, clst:["b", "g", "b", "!"], meth:-1, pram:-1, actn:star)
-                                butv(kind:"viewfinder.circle", size:26.0, extr:[epad*spcr, 0.0], iidx:7, clst:["b", "g", "b", "!"], meth:-1, pram:-1, actn:fndr)
-                                butv(kind:"line.3.horizontal.circle", size:26.0, extr:[epad*spcr, 0.0], iidx:8, clst:["b", "g", (tsho == "no") ? "b" : "g", "*"], meth:-1, pram:-1, actn:shot)
-                                butv(kind:funs(iidx:9), size:26.0, extr:[epad*spcr, 0.0], iidx:9, clst:["b", "g", (shws == false) ? "b" : "g", "~"], meth:-1, pram:-1, actn:clks)
-                            }.frame(width:1.0, height:1.0).offset(x:-11.00, y:29.00-offs)
-                        )
-                    }.offset(x:0.09, y:-17.99)
-                    HStack {  }.padding(.leading, 36.0)
-                }.padding(EdgeInsets(top:12.0, leading:0.0, bottom:38.0, trailing:0.0))
+                    HStack {  }.padding(.leading, 24.0)
+                    popv()
+                }.padding(EdgeInsets(top:12.0, leading:0.0, bottom:40.0, trailing:0.0))
                 colv()
-                HStack {
-                    ZStack {
-                        ScrollViewReader { proxy in
-                            Table(tabl, selection:$sels, sortOrder:$srts, columnCustomization:$cols) {
-                                TableColumn(" ") { temp in
-                                    let istr = ((hold == nil) || (temp.id != hold!.id)) ? "circle.dotted" : "star.circle"
-                                    let isiz = ((hold == nil) || (temp.id != hold!.id)) ? 18.0 : 20.0
-                                    txtv(strs:" ", size:15.0, colr:colr(k:"l"), kind:1, bold:1).overlay(ZStack {
-                                        Image(systemName:istr).resizable().scaledToFit().frame(width:isiz, height:isiz).foregroundColor(colr(k:"l"))
-                                    }.zIndex(11.0))
-                                }.customizationID("*").alignment(.center)
-                                TableColumn("Track", value:\.song) { temp in
-                                    txtv(strs:temp.song, size:13.0, colr:colr(k:"l"), kind:0, bold:0)
-                                }.customizationID("Track")
-                                TableColumn("Artist", value:\.band) { temp in
-                                    txtv(strs:temp.band, size:13.0, colr:colr(k:"l"), kind:0, bold:0)
-                                }.customizationID("Artist")
-                                TableColumn("Album", value:\.albm) { temp in
-                                    txtv(strs:temp.albm, size:13.0, colr:colr(k:"l"), kind:0, bold:0)
-                                }.customizationID("Album")
-                                TableColumn("Genre", value:\.genr) { temp in
-                                    txtv(strs:temp.genr, size:13.0, colr:colr(k:"l"), kind:0, bold:0)
-                                }.customizationID("Genre")
-                                TableColumn("Year", value:\.year) { temp in
-                                    txtv(strs:temp.year, size:11.0, colr:colr(k:"l"), kind:1, bold:1)
-                                }.customizationID("Year").alignment(.center)
-                                TableColumn("Time", value:\.tstr) { temp in
-                                    txtv(strs:temp.tstr, size:11.0, colr:colr(k:"l"), kind:1, bold:1)
-                                }.customizationID("Time").alignment(.center)
-                                TableColumn("Date", value:\.date) { temp in
-                                    txtv(strs:temp.date, size:11.0, colr:colr(k:"l"), kind:1, bold:1)
-                                }.customizationID("Date").alignment(.center)
-                            }.onChange(of:srts) { olds, vals in
-                                nobj.glob().withLock {
-                                    let tmps = "\(vals[0].keyPath):\(vals[0].order)"
-                                    if (pidx < 0) {
-                                        srts = [vals[0]]
-                                        baup.sort(using:srts)
-                                        if (srch == "") { tabl = baup }
-                                        nobj.sync(inpt:baup)
-                                        srtz = tmps
-                                    } else {
-                                        if ((-1 < pidx) && (pidx < plst.count)) {
-                                            plst[pidx][4] = tmps
-                                        }
-                                    }
-                                }
-                            }.onChange(of:sels) { olds, vals in
-                                nobj.glob().withLock {
-                                    if (xfru == nil) {
-                                        if ((sell == nil) || (vals.count == 1)) {
-                                            sell = vals.first
-                                        }
-                                        if (sell != nil) {
-                                            if ((sels.count > 1) || (!(sels.contains(sell!)))) {
-                                                sels.removeAll()
-                                            }
-                                            sels.insert(sell!)
-                                        }
-                                    }
-                                    nobj.xfer(inpt:sell)
-                                }
-                            }.onChange(of:xfru) { olds, vals in
-                                nobj.glob().withLock {
-                                    if (xfru != nil) {
-                                        withAnimation {
-                                            proxy.scrollTo(xfru!, anchor:.leading)
-                                        }
-                                        if (xfrs != nil) {
-                                            sels.removeAll()
-                                            sels.insert(xfrs!)
-                                            sell = xfrs!
-                                        }
-                                        xfrs = nil
-                                        xfru = nil
-                                    }
-                                    nobj.xfer(inpt:sell)
-                                }
-                            }.onChange(of:relo) { olds, vals in
-                                if (relo[1] != relo[0]) {
-                                    relo[1] = relo[0]
-                                }
-                            }.focusable().focused($isfo)
-                            .alternatingRowBackgrounds(.disabled)
-                            .scrollContentBackground(.hidden)
-                            .background(colr(k:"w"))
-                            .cornerRadius(7.0)
-                            .opacity(0.99)
-                            .contextMenu(forSelectionType:mdat.ID.self) { item in
-                                /* no-op */
-                            } primaryAction: { item in
-                                var iidx = 0
-                                for trak in baup {
-                                    if (item.contains(trak.id)) {
-                                        nobj.halt(high:0)
-                                        nobj.indx = iidx
-                                        bply()
-                                    }
-                                    iidx = (iidx + 1)
-                                }
-                            }.onKeyPress(action:{ pres in
-                                keyp(pres:pres)
-                                return .handled
-                            })
-                        }
-                    }.padding(EdgeInsets(top:-7.9, leading:11.0, bottom:11.0, trailing:11.0))
-                        .zIndex(1.0)
-                        .overlay(panv())
-                        .overlay(pref())
-                }.frame(maxWidth:.infinity, maxHeight:.infinity)
-                HStack {
-                    HStack {
-                        HStack {
-                            Spacer()
-                            let stts = tabl.count.formatted().replacingOccurrences(of:",", with:",")
-                            let strv = String(format:"%@  Tracks", stts)
-                            txtv(strs:strv, size:15.0, colr:colr(k:"t"), kind:3, bold:0)
-                        }.frame(maxWidth:.infinity).offset(y:0.99)
-                        HStack {
-                            /*Rectangle().frame(width:1.0, height:1.0).foregroundColor(noco())
-                             .overlay(RoundedRectangle(cornerRadius:1.0).frame(width:1.9, height:19.0).foregroundColor(colr(k:"t"))*/
-                            if let imgo = imgs() {
-                                Rectangle().frame(width:1.0, height:1.0).foregroundColor(noco()).padding(EdgeInsets(top:0.0, leading:19.0, bottom:0.0, trailing:19.0)).overlay(
-                                    imgo.resizable().frame(width:45.0, height:45.0).opacity(0.75)
-                                        .rotationEffect(.degrees(rota)).onChange(of:rotf) {
-                                            if (rotf != 0) {
-                                                withAnimation(.linear(duration:1).speed(0.15).repeatForever(autoreverses:false)) {
-                                                    rota = 360.0
-                                                }
-                                            } else {
-                                                withAnimation(.linear(duration:0)) {
-                                                    rota = 0.0
-                                                }
-                                            }
-                                        })
-                            }
-                        }.padding(EdgeInsets(top:0.0, leading:11.0, bottom:0.0, trailing:11.0)).offset(y:-0.69)
-                        HStack {
-                            let strv = String(format:"TurnTable  %@", String().version())
-                            txtv(strs:strv, size:15.0, colr:colr(k:"t"), kind:3, bold:0)
-                            Spacer()
-                        }.frame(maxWidth:.infinity).offset(y:0.99)
-                    }.offset(x:-7.99, y:-7.99)
-                    HStack {
-                        Rectangle().frame(width:1.0, height:37.99).foregroundColor(noco()).overlay(ProgressView().scaleEffect(x:0.69, y:0.69, anchor:.center).offset(x:-25.99, y:-7.99))
-                    }.opacity(opap)
-                }.onHover { over in
-                    let iidx = idxs[2]
-                    shwp = false
-                    clrs[iidx][2] = (clrs[iidx][0] + clrs[iidx][5])
-                }
+                tobv()
+                botv()
+                moov()
+                Spacer(minLength:0.0)
             }.background(bgfu(k:1))
         }.background(bgfu(k:0))
         .onAppear {
-            print(Date(),"DEBUG","VIEW","init")
+            print(Date(),"DEBUG","view","init")
             let _ = main()
+            NSEvent.addLocalMonitorForEvents(matching:.systemDefined) { event in
+                if (event.subtype.rawValue == 8) {
+                    let kcode = ((event.data1 & 0xFFFF0000) >> 16)
+                    let kflag = (event.data1 & 0x0000FFFF)
+                    let kstat = ((((kflag & 0xFF00) >> 8)) == 10)
+                    keye(keyc:Int32(kcode), keys:kstat)
+                }
+                return event
+            }
         }
     }
 
-    func bgfu(k:Int) -> AnyShapeStyle {
-        let iidx = Int(wini[1])
-        let noop = Color.clear
-        let back = colr(k:"r")
-        if (wini[0] <= 60.0) { wini[0] = 97.0 }
-        if (k == 0) {
-            if (iidx > 0) { return AnyShapeStyle(back.opacity(0.55)) }
-            else { return AnyShapeStyle(noop) }
-        } else {
-            if let blur = winl[iidx] as? Material {
-                return AnyShapeStyle(blur.opacity(wini[0]/100))
+    func keye(keyc:Int32, keys:Bool) {
+        if ((keyz != 0) && (keys == true)) {
+            switch(keyc) {
+            case NX_KEYTYPE_PLAY:
+                bply(-1)
+                break
+            case NX_KEYTYPE_FAST:
+                more(-1)
+                break
+            case NX_KEYTYPE_REWIND:
+                prev(-1)
+                break
+            default:
+                break
             }
-            return AnyShapeStyle(winc)
+            keyz = 1
         }
     }
 
     func colr(k:String) -> Color {
         var offs = 0.0
-        if (wini[0] <= 60.0) { wini[0] = 97.0 }
-        if ((k.count > 1) && k.hasSuffix("h")) { offs = wini[2] }
-        var acol = Color.init(red:0.17+offs, green:0.17+offs, blue:0.17+offs, opacity:wini[0]/100)
-        var bcol = Color.init(red:0.13+offs, green:0.55+offs, blue:0.87+offs, opacity:0.95)
-        var tcol = Color.init(red:0.91+offs, green:0.87+offs, blue:0.71+offs, opacity:0.95)
-        var wcol = Color.init(red:0.13+offs, green:0.13+offs, blue:0.13+offs, opacity:0.53)
-        var scol = Color.init(red:0.17+offs, green:0.17+offs, blue:0.17+offs, opacity:0.97)
-        var rcol = Color.init(red:0.35+offs, green:0.35+offs, blue:0.35+offs, opacity:0.99)
-        var gcol = tcol.opacity(0.75)
-        var lcol = tcol.opacity(0.79)
-        var zcol = tcol.opacity(0.09)
-        if (cbno[0] != 0.00) {
-            let nsco = NSColor(cbco)
+        if (wina[0] <= 60.0) { wina[0] = 97.0 }
+        if (wina[3] <= 50.0) { wina[3] = 77.0 }
+        if ((k.count > 1) && k.hasSuffix("h")) { offs = wina[2] }
+        let cidx = (mods == 0) ? 1 : 0
+        let alll = [
+            [[0.13, 0.55, 0.87, 0.95], [0.19, 0.65, 0.99, 0.99]],
+            [[0.91, 0.87, 0.71, 0.75], [0.87, 0.83, 0.67, 0.99]],
+            [[0.91, 0.87, 0.71, 0.95], [0.09, 0.09, 0.09, 0.99]],
+            [[0.91, 0.87, 0.71, wina[3]/100], [0.09, 0.09, 0.09, wina[3]/100]],
+            [[0.91, 0.87, 0.71, 0.09], [0.87, 0.87, 0.75, 0.69]],
+            [[0.17, 0.17, 0.17, wina[0]/100], [0.33, 0.33, 0.33, wina[0]/100]],
+            [[0.17, 0.17, 0.17, 0.97], [0.33, 0.33, 0.33, 0.99]],
+            [[0.13, 0.13, 0.13, 0.53], [0.97, 0.97, 0.97, 0.99]],
+            [[0.35, 0.35, 0.35, 0.99], [0.99, 0.99, 0.99, 0.99]],
+            [[0.91, 0.87, 0.71, 0.11], [0.87, 0.87, 0.75, 0.69]],
+        ]
+        var bcol = Color.init(red:alll[0][cidx][0]+offs, green:alll[0][cidx][1]+offs, blue:alll[0][cidx][2]+offs, opacity:alll[0][cidx][3])
+        var gcol = Color.init(red:alll[1][cidx][0]+offs, green:alll[1][cidx][1]+offs, blue:alll[1][cidx][2]+offs, opacity:alll[1][cidx][3])
+        var tcol = Color.init(red:alll[2][cidx][0]+offs, green:alll[2][cidx][1]+offs, blue:alll[2][cidx][2]+offs, opacity:alll[2][cidx][3])
+        var lcol = Color.init(red:alll[3][cidx][0]+offs, green:alll[3][cidx][1]+offs, blue:alll[3][cidx][2]+offs, opacity:alll[3][cidx][3])
+        var zcol = Color.init(red:alll[4][cidx][0]+offs, green:alll[4][cidx][1]+offs, blue:alll[4][cidx][2]+offs, opacity:alll[4][cidx][3])
+        var acol = Color.init(red:alll[5][cidx][0]+offs, green:alll[5][cidx][1]+offs, blue:alll[5][cidx][2]+offs, opacity:alll[5][cidx][3])
+        var scol = Color.init(red:alll[6][cidx][0]+offs, green:alll[6][cidx][1]+offs, blue:alll[6][cidx][2]+offs, opacity:alll[6][cidx][3])
+        var wcol = Color.init(red:alll[7][cidx][0]+offs, green:alll[7][cidx][1]+offs, blue:alll[7][cidx][2]+offs, opacity:alll[7][cidx][3])
+        var rcol = Color.init(red:alll[8][cidx][0]+offs, green:alll[8][cidx][1]+offs, blue:alll[8][cidx][2]+offs, opacity:alll[8][cidx][3])
+        var ycol = Color.init(red:alll[9][cidx][0]+offs, green:alll[9][cidx][1]+offs, blue:alll[9][cidx][2]+offs, opacity:alll[9][cidx][3])
+        if (clno[0][0] != 0.00) {
+            let nsco = NSColor(clco[0])
             bcol = Color.init(red:nsco.redComponent+offs, green:nsco.greenComponent+offs, blue:nsco.blueComponent+offs, opacity:nsco.alphaComponent)
         }
-        if (chno[0] != 0.00) {
-            let nsco = NSColor(chco)
+        if (clno[1][0] != 0.00) {
+            let nsco = NSColor(clco[1])
             gcol = Color.init(red:nsco.redComponent+offs, green:nsco.greenComponent+offs, blue:nsco.blueComponent+offs, opacity:nsco.alphaComponent)
         }
-        if (ctno[0] != 0.00) {
-            let nsco = NSColor(ctco)
+        if (clno[2][0] != 0.00) {
+            let nsco = NSColor(clco[2])
             tcol = Color.init(red:nsco.redComponent+offs, green:nsco.greenComponent+offs, blue:nsco.blueComponent+offs, opacity:nsco.alphaComponent)
-            lcol = Color.init(red:nsco.redComponent+offs, green:nsco.greenComponent+offs, blue:nsco.blueComponent+offs, opacity:nsco.alphaComponent*0.79)
+            lcol = Color.init(red:nsco.redComponent+offs, green:nsco.greenComponent+offs, blue:nsco.blueComponent+offs, opacity:wina[3]/100)
         }
-        if (cuno[0] != 0.00) {
-            let nsco = NSColor(cuco)
+        if (clno[3][0] != 0.00) {
+            let nsco = NSColor(clco[3])
             zcol = Color.init(red:nsco.redComponent+offs, green:nsco.greenComponent+offs, blue:nsco.blueComponent+offs, opacity:nsco.alphaComponent)
         }
-        if (cvno[0] != 0.00) {
-            let nsco = NSColor(cvco)
-            acol = Color.init(red:nsco.redComponent+offs, green:nsco.greenComponent+offs, blue:nsco.blueComponent+offs, opacity:wini[0]/100)
+        if (clno[4][0] != 0.00) {
+            let nsco = NSColor(clco[4])
+            acol = Color.init(red:nsco.redComponent+offs, green:nsco.greenComponent+offs, blue:nsco.blueComponent+offs, opacity:wina[0]/100)
             scol = Color.init(red:nsco.redComponent+offs, green:nsco.greenComponent+offs, blue:nsco.blueComponent+offs, opacity:nsco.alphaComponent)
         }
-        if (clno[0] != 0.00) {
-            let nsco = NSColor(clco)
+        if (clno[5][0] != 0.00) {
+            let nsco = NSColor(clco[5])
             wcol = Color.init(red:nsco.redComponent+offs, green:nsco.greenComponent+offs, blue:nsco.blueComponent+offs, opacity:nsco.alphaComponent)
         }
-        if (crno[0] != 0.00) {
-            let nsco = NSColor(crco)
+        if (clno[6][0] != 0.00) {
+            let nsco = NSColor(clco[6])
             rcol = Color.init(red:nsco.redComponent+offs, green:nsco.greenComponent+offs, blue:nsco.blueComponent+offs, opacity:nsco.alphaComponent)
+        }
+        if (clno[7][0] != 0.00) {
+            let nsco = NSColor(clco[7])
+            ycol = Color.init(red:nsco.redComponent+offs, green:nsco.greenComponent+offs, blue:nsco.blueComponent+offs, opacity:nsco.alphaComponent)
+        }
+        if (offs != 0.0) {
+            ycol = ycol.opacity(0.69)
         }
         if ((k == "a") || (k == "ah")) { return acol }
         if ((k == "b") || (k == "bh")) { return bcol }
@@ -1310,6 +1795,7 @@ struct ContentView: View {
         if ((k == "s") || (k == "sh")) { return scol }
         if ((k == "g") || (k == "gh")) { return gcol }
         if ((k == "r") || (k == "rh")) { return rcol }
+        if ((k == "y") || (k == "yh")) { return ycol }
         let aclr = Color.init(red:0.71+offs, green:0.49+offs, blue:0.93+offs, opacity:0.97)
         let bclr = Color.init(red:0.69+offs, green:0.55+offs, blue:0.45+offs, opacity:0.97)
         let gclr = Color.init(red:0.59+offs, green:0.91+offs, blue:0.57+offs, opacity:0.97)
@@ -1321,25 +1807,41 @@ struct ContentView: View {
         return noco()
     }
 
-    func main() {
-        nobj.main(objc:self)
-        isfo = true
-        shuf[1] = false
-        cbco = Color(red:cbno[1], green:cbno[2], blue:cbno[3], opacity:cbno[0])
-        chco = Color(red:chno[1], green:chno[2], blue:chno[3], opacity:chno[0])
-        ctco = Color(red:ctno[1], green:ctno[2], blue:ctno[3], opacity:ctno[0])
-        cuco = Color(red:cuno[1], green:cuno[2], blue:cuno[3], opacity:cuno[0])
-        cvco = Color(red:cvno[1], green:cvno[2], blue:cvno[3], opacity:cvno[0])
-        clco = Color(red:clno[1], green:clno[2], blue:clno[3], opacity:clno[0])
-        crco = Color(red:crno[1], green:crno[2], blue:crno[3], opacity:crno[0])
-        winc = colr(k:"a")
-        wins = 1
+    func bgfu(k:Int) -> AnyShapeStyle {
+        let iidx = Int(wina[1])
+        let noop = Color.clear
+        let back = colr(k:"r")
+        if (wina[0] <= 60.0) { wina[0] = 97.0 }
+        if (k == 0) {
+            if (iidx > 0) { return AnyShapeStyle(back.opacity(0.55)) }
+            else { return AnyShapeStyle(noop) }
+        } else {
+            if let blur = winl[iidx] as? Material {
+                return AnyShapeStyle(blur.opacity(wina[0]/100))
+            }
+            return AnyShapeStyle(winc)
+        }
     }
 
-    func form(inpt:Int64) -> String {
-        let mins = (inpt / 60)
-        let secs = (inpt % 60)
-        return String(format:"%02d:%02d", mins, secs)
+    func main() {
+        nobj.main()
+        nobj.view_shuf = shuf;
+        nobj.view_srtz = srtz;
+        nobj.view_time[0] = nobj.form(inpt:0)
+        nobj.view_time[1] = nobj.form(inpt:0)
+        nobj.view_shuf[1] = false
+        isfo = true
+        var i = 0
+        for _ in clno {
+            clco[i] = Color(red:clno[i][1], green:clno[i][2], blue:clno[i][3], opacity:clno[i][4])
+            i += 1
+        }
+        nobj.view_tabb = nobj.view_tabb.main(nobj.view_tabl, colz:colu, ordr:cord, sizs:csiz, hist:chis)
+        tabz = tabs(objc:$nobj.view_tabb, sees:$nobj.view_sees, sels:$nobj.view_sels, scro:$nobj.view_scro, srts:$nobj.view_srtz)
+        nobj.view_tabb.clrs.data_rows_type = rowl[rows]
+        nobj.view_tabb.clrs.body_radi = 9.99
+        refz()
+        shma(1)
     }
 
     func gets(kind:Int) -> String {
@@ -1349,29 +1851,35 @@ struct ContentView: View {
                 if (kind == 0) { return String(format:"%@", hobj!.song) }
                 if (kind == 1) { return String(format:"%@ [%@]", hobj!.band, hobj!.genr) }
             } else {
-                if (tabl.count < 1) {
+                if (nobj.view_tabl.count < 1) {
                     if (kind == 0) { return "Loading Tracks" }
                     if (kind == 1) { return "Please Standby" }
                 } else {
                     if (kind == 0) { return "Tracks Loaded" }
-                    if (kind == 1) { return tabl.count.formatted() }
+                    if (kind == 1) { return nobj.view_tabl.count.formatted() }
                 }
             }
             return " "
         }
     }
 
+    func plyz() -> Int {
+        if (mode == "play.circle") { return 0 }
+        return 1
+    }
+
+    func plyi() -> String {
+        if (plyz() == 0) { return "play.circle" }
+        return "pause.circle"
+    }
+
     func symb(r:Int) {
-        var iidx = 0
-        let idxl = [0, 5, 7]
-        let retl = ["play.circle", "pause.circle"]
-        if (r == 1) {
-            iidx = 1
-        }
-        mode = retl[iidx]
+        mode = (r == 0) ? "play.circle" : "pause.circle"
+        let jidx = plyz()
+        let idxl = [0, 1, 5]
         for idxi in idxl {
-            let jidx = idxs[idxi]
-            clrs[jidx][2] = (clrs[jidx][iidx] + clrs[jidx][5])
+            let iidx = idxs[idxi]
+            clrs[iidx][2] = (clrs[iidx][jidx] + clrs[iidx][5])
         }
         imgl = 0
     }
@@ -1382,62 +1890,81 @@ struct ContentView: View {
         if ((chks != 1) || (over == 1)) {
             if (nobj.pobj == nil) {
                 r = nobj.play(mobj:objc, over:1)
-                print(Date(),"DEBUG","play",objc,over,r)
             } else {
                 r = nobj.play(mobj:nil, over:1)
-                print(Date(),"DEBUG","resu",objc,over,r)
             }
         } else {
-            nobj.stop()
-            r = 0
-            print(Date(),"DEBUG","paus",objc,over,r)
+            r = nobj.stop()
         }
         symb(r:r)
-        return 0
+        keyz = r
+        return r
    }
 
-    func more() {
-        let r = nobj.next(iidx:1, over:0)
-        symb(r:r)
-        DispatchQueue.main.asyncAfter(deadline:.now() + 0.95) { relo[0] = Int.random(in:1..<1000) }
+    func seek(when:Int64) {
+        if (nobj.tabp.count > 0) {
+            let cobj = nobj.plyr.currentTime()
+            let csec = nobj.divs(a:Int64(cobj.value), b:Int64(cobj.timescale))
+            nobj.plyr.seek(to:CMTime(seconds:Double(csec+when), preferredTimescale:CMTimeScale(1)))
+        }
     }
 
-    func prev() {
+    func ffwd(_ args:Int) {
+        if (nobj.tabp.count > 0) {
+            seek(when:10)
+        }
+    }
+
+    func frev(_ args:Int) {
+        if (nobj.tabp.count > 0) {
+            seek(when:-10)
+        }
+    }
+
+    func more(_ args:Int) {
+        if (nobj.tabp.count > 0) {
+            let r = nobj.next(iidx:1, over:0)
+            symb(r:r)
+        }
+    }
+
+    func prev(_ args:Int) {
         var i = -1
-        let l = time[0].components(separatedBy:":")
+        let l = nobj.view_time[0].components(separatedBy:":")
         if (l.count > 1) {
             let n = Int(l[1])
             if ((n != nil) && (n! >= 5)) { i = 0 }
         }
-        let r = nobj.next(iidx:i, over:0)
-        symb(r:r)
-        DispatchQueue.main.asyncAfter(deadline:.now() + 0.95) { relo[0] = Int.random(in:1..<1000) }
-    }
-
-    func bply() {
-        if (tabl.count > 0) {
-            var iidx = 0
-            let hobj = nobj.geth()
-            if (hobj != nil) { iidx = nobj.indx }
-            let _ = play(objc:baup[iidx], over:0)
+        if (nobj.tabp.count > 0) {
+            let r = nobj.next(iidx:i, over:0)
+            symb(r:r)
         }
     }
 
-    func star() {
+    func bply(_ args:Int) {
+        if (nobj.tabp.count > 0) {
+            var iidx = 0
+            let hobj = nobj.geth()
+            if (hobj != nil) { iidx = (nobj.indx % nobj.tabp.count) }
+            let _ = play(objc:nobj.tabp[iidx], over:0)
+        }
+    }
+
+    func star(_ args:Int) {
         nobj.glob().withLock {
             let hobj = nobj.geth()
             if (hobj != nil) {
-                xfrs = hobj!.id
-                xfru = hobj!.id
-                sels.insert(UUID())
+                nobj.view_sels = hobj!.id
+                nobj.view_scro = hobj!.id
+                nobj.view_tabb.iscr += 1
             }
         }
     }
 
-    func fndr() {
-        if (!sels.isEmpty) {
-            for item in tabl {
-                if (sels.contains(item.id)) {
+    func fndr(_ args:Int) {
+        if (nobj.view_sels != nil) {
+            for item in nobj.view_tabl {
+                if (item.id == nobj.view_sels!) {
                     let urlp = URL(fileURLWithPath:item.path)
                     NSWorkspace.shared.activateFileViewerSelecting([urlp])
                 }
@@ -1446,22 +1973,22 @@ struct ContentView: View {
     }
 
     func filt() {
-        let iidx = idxs[3]
-        let nows = Int(Date().timeIntervalSince1970)
-        if (srch == "") {
+        let iidx = idxs[2]
+        let nows = 1970.time()
+        if (nobj.view_srch == "") {
             clrs[iidx][2] = clrs[iidx][0]
-            usee(mode:1)
+            usee(9)
         } else {
             clrs[iidx][2] = clrs[iidx][1]
         }
         if ((nows - last) <= 1) {
             DispatchQueue.main.asyncAfter(deadline:.now() + 0.50) { filt() }
-        } else if (baup.count > 0) {
-            if (srch != "") {
+        } else if (nobj.view_baup.count > 0) {
+            if (nobj.view_srch != "") {
                 do {
-                    let regx = try Regex("^.*"+srch+".*$").ignoresCase()
+                    let regx = try Regex("^.*"+nobj.view_srch+".*$").ignoresCase()
                     var temp = [] as [mdat]
-                    for item in baup {
+                    for item in nobj.view_baup {
                         if let _ = item.hash.wholeMatch(of:regx) {
                             temp.append(item)
                         }
@@ -1471,14 +1998,16 @@ struct ContentView: View {
                         temp.sort(using:gsrt)
                     }
                     nobj.glob().withLock {
-                        tabl = temp
+                        nobj.view_tabl = temp
+                        refr = UUID()
                     }
                 } catch {
                     /* no-op */
                 }
             } else {
                 nobj.glob().withLock {
-                    tabl = baup
+                    nobj.view_tabl = nobj.view_baup
+                    refr = UUID()
                 }
                 var i = 0
                 while (i < bldr.count) {
@@ -1491,260 +2020,230 @@ struct ContentView: View {
         }
     }
 
-    func funp(iidx:Int) -> String {
-        var jidx = 0
-        var kind = "plus.circle"
-        if (shwp == true) {
-            jidx = 1
-            kind = "minus.circle"
+    func shma(_ mode:Int) {
+        let dely = 0.01
+        if (shwm == true) {
+            if let wind = NSApp.windows.first {
+                if (mode != 1) {
+                    winz = [Int(wind.frame.origin.x), Int(wind.frame.origin.y), Int(wind.frame.width), Int(wind.frame.height)]
+                }
+                if ((winz[2] > 50) && (winz[3] > 50)) {
+                    let ssiz = [915, 125]
+                    var temp = [winz[0], winz[1]+(winz[3]-ssiz[1]), ssiz[0], ssiz[1]]
+                    if ((wini[2] > 50) && (wini[3] > 50)) {
+                        temp = [wini[0], wini[1], ssiz[0], ssiz[1]]
+                    }
+                    DispatchQueue.main.asyncAfter(deadline:.now() + dely) {
+                        wind.styleMask.remove(.resizable)
+                        wind.setFrame(NSRect(x:temp[0], y:temp[1], width:temp[2], height:temp[3]), display:true)
+                    }
+                }
+            }
+        } else {
+            if let wind = NSApp.windows.first {
+                if (mode != 1) {
+                    wini = [Int(wind.frame.origin.x), Int(wind.frame.origin.y), Int(wind.frame.width), Int(wind.frame.height)]
+                }
+                if ((winz[2] > 50) && (winz[3] > 50)) {
+                    wind.setFrame(NSRect(x:winz[0], y:winz[1], width:winz[2], height:winz[3]), display:true)
+                    wind.styleMask.insert(.resizable)
+                }
+            }
         }
-        DispatchQueue.main.asyncAfter(deadline:.now() + 0.0) {
-            clrs[iidx][4] = "*"
-            clrs[iidx][2] = (clrs[iidx][jidx] + clrs[iidx][5])
+        DispatchQueue.main.asyncAfter(deadline:.now() + dely) {
+            nobj.view_rotf += 1
+            refr = UUID()
         }
-        return kind
     }
 
-    func clkp() {
+    func shms(_ args:Int) {
+        if (shwm == false) { shwm = true }
+        else { shwm = false }
+    }
+
+    func shmz() -> Int {
+        if (shwm == false) { return 0 }
+        return 1
+    }
+
+    func shfz() -> Int {
+        if ((nobj.view_shuf[0] == false) && (nobj.view_shuf[1] == false)) { return 0 }
+        return 1
+    }
+
+    func mutz() -> Int {
+        if (mute == false) { return 0 }
+        return 1
+    }
+
+    func muti() -> String {
+        if (mutz() == 0) { return "speaker.circle" }
+        return "speaker.slash.circle"
+    }
+
+    func fswz() -> Int {
+        if (shwp == false) { return 0 }
+        return 1
+    }
+
+    func fswi() -> String {
+        if (fswz() == 0) { return "plus.circle" }
+        return "minus.circle"
+    }
+
+    func fswa(_ args:Int) {
         shws = false
         if (shwp == false) { shwp = true }
         else { shwp = false }
     }
 
-    func panv() -> AnyView {
-        var vobj = AnyView(EmptyView())
-        if (shwp == true) {
-            //let side = [0.0, 0.0]
-            let side = [65.0, 97.0]
-            let wide = 256.0
-            let bpad = 60.0
-            let rads = 17.0
-            let zclr = "g"
-            vobj = AnyView(
-                ZStack {
-                    HStack {
-                        VStack {
-                            HStack {
-                                Spacer()
-                                ZStack {
-                                    VStack {
-                                        RoundedRectangle(cornerRadius:rads).inset(by:-1.0)
-                                            .stroke(colr(k:zclr), lineWidth:2.33)
-                                            .overlay(
-                                                HStack {
-                                                    VStack {
-                                                        HStack {
-                                                            let iidx = idxs[4]
-                                                            Spacer()
-                                                            TextField("Playlist", text:$name)
-                                                                .onChange(of:name) { olds, vals in
-                                                                    if (name == "") {
-                                                                        clrs[iidx][2] = clrs[iidx][0]
-                                                                        usee(mode:9)
-                                                                    } else {
-                                                                        clrs[iidx][2] = clrs[iidx][1]
-                                                                    }
-                                                                }
-                                                                .frame(width:128.0)
-                                                                .showClearButton($name)
-                                                                .foregroundColor(colr(k:"t"))
-                                                                .disableAutocorrection(true)
-                                                                .textFieldStyle(.plain)
-                                                                .font(Font.custom("Menlo", size:13.0).weight(.bold))
-                                                                .padding(EdgeInsets(top:1.5, leading:12.0, bottom:1.5, trailing:24.0))
-                                                                .overlay(RoundedRectangle(cornerRadius:9.0).inset(by:-3.5).stroke(colr(k:clrs[iidx][2]), lineWidth:3.0))
-                                                                .offset(x:3.0, y:0.5)
-                                                            Rectangle().foregroundColor(noco()).frame(width:1.0, height:1.0)
-                                                            butv(kind:"plus.circle", size:24.0, extr:[0.0, 0.0], iidx:11, clst:["b", "g", "b", "!"], meth:-1, pram:-1, actn:padd)
-                                                            Rectangle().foregroundColor(noco()).frame(width:5.9, height:1.0)
-                                                        }
-                                                        HStack {
-                                                            butv(kind:"a.circle", size:20.0, extr:[0.0, 0.0], iidx:16, clst:["fa", "g", "fa", "!"], meth:0, pram:0, actn:nill)
-                                                            butv(kind:"b.circle", size:20.0, extr:[0.0, 0.0], iidx:17, clst:["fb", "g", "fb", "!"], meth:0, pram:1, actn:nill)
-                                                            butv(kind:"g.circle", size:20.0, extr:[0.0, 0.0], iidx:18, clst:["fg", "g", "fg", "!"], meth:0, pram:2, actn:nill)
-                                                            butv(kind:"y.circle", size:20.0, extr:[0.0, 0.0], iidx:19, clst:["fo", "g", "fo", "!"], meth:0, pram:3, actn:nill)
-                                                        }.padding(EdgeInsets(top:4.0, leading:0.0, bottom:16.0, trailing:0.0))
-                                                        List {
-                                                            ForEach(0..<plst.count, id:\.self) { i in
-                                                                HStack {
-                                                                    txtv(strs:plst[i][0], size:15.0, colr:colr(k:"t"), kind:0, bold:0).padding(.leading, 8.0)
-                                                                    Spacer()
-                                                                    butv(kind:"pencil.circle", size:20.0, extr:[0.0, 0.0], iidx:100+i, clst:["b", "g", "b", "!"], meth:1, pram:i, actn:nill)
-                                                                    butv(kind:"multiply.circle", size:20.0, extr:[0.0, 0.0], iidx:200+i, clst:["b", "g", "b", "!"], meth:2, pram:i, actn:nill)
-                                                                }.padding(EdgeInsets(top:4.0, leading:0.0, bottom:4.0, trailing:8.0)).cornerRadius(15.0).background(pcol(iidx:i)).listRowSeparator(.hidden)
-                                                                    .contentShape(Rectangle()).onTapGesture {
-                                                                        psel(iidx:i)
-                                                                    }
-                                                            }
-                                                            Spacer()
-                                                        }.scrollIndicators(.never).scrollContentBackground(.hidden).background(noco()).frame(maxHeight:.infinity)
-                                                            .padding(EdgeInsets(top:0.0, leading:0.0, bottom:8.0, trailing:-9.0))
-                                                    }
-                                                }.frame(maxWidth:.infinity, maxHeight:.infinity).padding(.top, 12.0).padding(.trailing, side[0]).background(colr(k:"s")).cornerRadius(rads)
-                                            )
-                                        Rectangle().foregroundColor(noco()).frame(width:1.0, height:bpad)
-                                    }
-                                }.frame(width:wide+side[0]).offset(x:-45.0+side[1], y:35.0)
-                            }
-                            Spacer()
-                        }
-                        if (side[0] != 0.0) {
-                            ZStack { Rectangle().frame(width:1.0).foregroundColor(noco()).overlay(
-                                RoundedRectangle(cornerRadius:9.0).frame(width:45.0).frame(maxHeight:.infinity)
-                                    .padding(EdgeInsets(top:25.0, leading:0.0, bottom:25.0, trailing:0.0)).offset(y:-5.0)
-                                    .foregroundColor(colr(k:"s"))
-                            ) }.zIndex(33.0)
-                        }
-                    }
-                }.zIndex(11.0)
-            )
-        }
-        return vobj
+    func fssz() -> Int {
+        if (shws == false) { return 0 }
+        return 1
     }
 
-    func funs(iidx:Int) -> String {
-        let jidx = (shws == false) ? 0 : 1
-        DispatchQueue.main.asyncAfter(deadline:.now() + 0.0) {
-            clrs[iidx][4] = "*"
-            clrs[iidx][2] = (clrs[iidx][jidx] + clrs[iidx][5])
-        }
-        return "gearshape.circle"
+    func fssi() -> String {
+        if (fssz() == 0) { return "gearshape.circle" }
+        return "gearshape.circle" //minus.circle"
     }
 
-    func clks() {
+    func fssa(_ args:Int) {
         shwp = false
+        shwa = false
         if (shws == false) { shws = true }
         else { shws = false }
     }
 
-    func pref() -> AnyView {
+    func fscz() -> Int {
+        if (shwc == false) { return 0 }
+        return 1
+    }
+
+    func fsci() -> String {
+        if (fscz() == 0) { return "line.3.horizontal.circle" }
+        return "line.3.horizontal.circle" //"minus.circle"
+    }
+
+    func fsca(_ args:Int) {
+        if (shwc == false) { shwc = true }
+        else { shwc = false }
+    }
+
+    func fsbz() -> Int {
+        if (shwb == false) { return 0 }
+        return 1
+    }
+
+    func fsbi() -> String {
+        if (fsbz() == 0) { return "ellipsis.circle" }
+        return "ellipsis.circle" //"minus.circle"
+    }
+
+    func fsba(_ args:Int) {
+        shws = false
+        if (shwb == false) { shwb = true }
+        else { shwb = false }
+    }
+
+    func fsaz() -> Int {
+        if (shwa == false) { return 0 }
+        return 1
+    }
+
+    func fsai() -> String {
+        if (fsaz() == 0) { return "photo.circle" }
+        return "photo.circle" //"minus.circle"
+    }
+
+    func fsaa(_ args:Int) {
+        shws = false
+        if (shwa == false) { shwa = true }
+        else { shwa = false }
+    }
+
+    func moov() -> AnyView {
+        var vobj = AnyView(HStack {
+            /* no-op */
+        }.onChange(of:shwm) {
+            shma(-1)
+        })
+        if (shwm == true) {
+            vobj = AnyView(HStack {
+                /* no-op */
+            }.onChange(of:shwm) {
+                shma(-1)
+            })
+        }
+        return vobj
+    }
+
+    func popv() -> AnyView {
         var vobj = AnyView(EmptyView())
-        if (shws == true) {
-            let side = [0.0, 0.0]
-            let bpad = 60.0
-            let wpad = 75.0
-            let rads = 17.0
-            let zclr = "g"
-            vobj = AnyView(
-                ZStack {
+        if (shwm == false) {
+            vobj = AnyView(HStack {
+                HStack {  }.padding(.leading, 4.0)
+                VStack {
+                    let epad = 8.0
+                    let offs = 0.05
+                    let spcr = 1.55
                     HStack {
-                        VStack {
+                        if (shwb == false) {
                             HStack {
-                                Spacer()
-                                ZStack {
+                                let iidx = idxs[2]
+                                TextField("Filter", text:$nobj.view_srch).disabled(fals).onAppear {
+                                    fals = false
+                                }.onChange(of:nobj.view_srch) { olds, vals in
+                                    last = 1970.time()
+                                    filt()
+                                }
+                                .showClearButton($nobj.view_srch)
+                                .foregroundColor(colr(k:"t"))
+                                .disableAutocorrection(true)
+                                .textFieldStyle(.plain)
+                                .font(Font.custom("Menlo", size:15.0).weight(.bold))
+                                .padding(EdgeInsets(top:1.5, leading:12.0, bottom:1.5, trailing:24.0))
+                                .overlay(RoundedRectangle(cornerRadius:13.0).inset(by:-5.0).stroke(colr(k:clrs[iidx][2]), lineWidth:3.0))
+                            }.offset(x:3.99)
+                        } else {
+                            HStack {
+                                Color.clear.frame(height:1.0).contentShape(Rectangle()).overlay(ZStack {
+                                    RoundedRectangle(cornerRadius:19.0).stroke(colr(k:"b"), lineWidth:3.00)
+                                    //RoundedRectangle(cornerRadius:19.0).inset(by:1.99).fill(colr(k:"s"))
                                     VStack {
-                                        RoundedRectangle(cornerRadius:rads).inset(by:-1.0)
-                                            .stroke(colr(k:zclr), lineWidth:2.33)
-                                            .overlay(
-                                                VStack {
-                                                    VStack {
-                                                        HStack {
-                                                            Spacer()
-                                                            txtv(strs:"Settings", size:19.0, colr:colr(k:"t"), kind:0, bold:1)
-                                                            Spacer()
-                                                        }
-                                                        Text(" ")
-                                                        Text(" ")
-                                                        HStack {
-                                                            txtv(strs:"Colors", size:15.0, colr:colr(k:"t"), kind:0, bold:1)
-                                                            Text(" ")
-                                                            butv(kind:"multiply.circle", size:20.0, extr:[0.0, 0.0], iidx:91, clst:["b", "g", "b", "!"], meth:-1, pram:-1, actn:nilz)
-                                                            Text(" ")
-                                                            Text(" ")
-                                                            ColorPicker("Base", selection:$cbco).onChange(of:cbco) {
-                                                                let temp = NSColor(cbco)
-                                                                cbno = [temp.alphaComponent, temp.redComponent, temp.greenComponent, temp.blueComponent, 0.0]
-                                                                refz()
-                                                            }
-                                                            Text(" ")
-                                                            ColorPicker("High", selection:$chco).onChange(of:chco) {
-                                                                let temp = NSColor(chco)
-                                                                chno = [temp.alphaComponent, temp.redComponent, temp.greenComponent, temp.blueComponent, 0.0]
-                                                                refz()
-                                                            }
-                                                            Text(" ")
-                                                            ColorPicker("Text", selection:$ctco).onChange(of:ctco) {
-                                                                let temp = NSColor(ctco)
-                                                                ctno = [temp.alphaComponent, temp.redComponent, temp.greenComponent, temp.blueComponent, 0.0]
-                                                                refz()
-                                                            }
-                                                            Text(" ")
-                                                            ColorPicker("Tint", selection:$cuco).onChange(of:cuco) {
-                                                                let temp = NSColor(cuco)
-                                                                cuno = [temp.alphaComponent, temp.redComponent, temp.greenComponent, temp.blueComponent, 0.0]
-                                                                refz()
-                                                            }
-                                                            Text(" ")
-                                                            ColorPicker("View", selection:$cvco).onChange(of:cvco) {
-                                                                let temp = NSColor(cvco)
-                                                                cvno = [temp.alphaComponent, temp.redComponent, temp.greenComponent, temp.blueComponent, 0.0]
-                                                                refz()
-                                                            }
-                                                            Text(" ")
-                                                            ColorPicker("List", selection:$clco).onChange(of:clco) {
-                                                                let temp = NSColor(clco)
-                                                                clno = [temp.alphaComponent, temp.redComponent, temp.greenComponent, temp.blueComponent, 0.0]
-                                                                refz()
-                                                            }
-                                                            Text(" ")
-                                                            ColorPicker("Blur", selection:$crco).onChange(of:crco) {
-                                                                let temp = NSColor(crco)
-                                                                crno = [temp.alphaComponent, temp.redComponent, temp.greenComponent, temp.blueComponent, 0.0]
-                                                                refz()
-                                                            }
-                                                            Spacer()
-                                                        }
-                                                        Text(" ")
-                                                        HStack {
-                                                            var nice = round(wini[2] * 100)
-                                                            txtv(strs:"Window", size:15.0, colr:colr(k:"t"), kind:0, bold:1)
-                                                            Text(" ")
-                                                            butv(kind:"multiply.circle", size:20.0, extr:[0.0, 0.0], iidx:90, clst:["b", "g", "b", "!"], meth:-1, pram:-1, actn:zilw)
-                                                            Text(" ")
-                                                            Text(" ")
-                                                            txtv(strs:"Opacity", size:13.0, colr:colr(k:"t"), kind:0, bold:1)
-                                                            Slider(value:$wini[0], in:69...99, step:1).frame(width:128.0).onChange(of:wini[0]) {
-                                                                winc = colr(k:"a")
-                                                                wins = 1
-                                                            }
-                                                            txtv(strs:"\(Int(wini[0]))", size:13.0, colr:colr(k:"t"), kind:0, bold:1)
-                                                            Text(" ")
-                                                            Text(" ")
-                                                            txtv(strs:"Blur", size:13.0, colr:colr(k:"t"), kind:0, bold:1)
-                                                            Slider(value:$wini[1], in:0...5, step:1).frame(width:128.0).onChange(of:wini[1]) {
-                                                                wins = 2
-                                                            }
-                                                            Text(" ")
-                                                            Text(" ")
-                                                            txtv(strs:"Hover", size:13.0, colr:colr(k:"t"), kind:0, bold:1)
-                                                            Slider(value:$wini[2], in:-0.19...0.19, step:0.001).frame(width:128.0).onChange(of:wini[2]) {
-                                                                nice = round(wini[2] * 100)
-                                                                wini[2] = (Double(nice) / 100)
-                                                            }
-                                                            let outs = String(format:"%@0.%02d", (nice < 0.0) ? "-" : "+", Int(abs(nice)))
-                                                            txtv(strs:"\(outs)", size:13.0, colr:colr(k:"t"), kind:0, bold:1)
-                                                            Spacer()
-                                                        }
-                                                        Spacer()
-                                                    }.padding(.leading, 16.0)
-                                                }.frame(maxWidth:.infinity, maxHeight:.infinity).padding(.top, 12.0).padding(.trailing, side[0]).background(colr(k:"s")).cornerRadius(rads)
-                                            )
-                                        Rectangle().foregroundColor(noco()).frame(width:1.0, height:bpad)
-                                    }
-                                }.padding(.leading, 89.0+wpad).offset(x:-45.0+side[1], y:35.0)
-                            }
-                            Spacer()
+                                        HStack {
+                                            Spacer()
+                                            butv(kind:fsai(), size:26.0, extr:[epad*spcr, 0.0], iidx:27, clst:["b", "g", "b", "~"], pram:-1, actn:fsaa, actc:fsaz)
+                                            butv(kind:fssi(), size:26.0, extr:[epad*spcr, 0.0], iidx:25, clst:["b", "g", "b", "~"], pram:-1, actn:fssa, actc:fssz)
+                                        }.padding(.trailing, 1.0)
+                                        Spacer()
+                                    }.offset(x:-13.99, y:7.99)
+                                }.padding(.trailing, -11.0).frame(height:85.0).offset(x:3.00, y:21.00+offs))
+
+                            }.offset(x:-3.99, y:-1.99)
                         }
-                    }
-                }.zIndex(11.0)
-            )
+                        butv(kind:fswi(), size:30.0, extr:[0.0, 0.0], iidx:idxs[4], clst:["b", "g", "b", "~"], pram:-1, actn:fswa, actc:fswz).offset(x:12.0).overlay(
+                            butv(kind:"multiply.circle", size:26.0, extr:[0.0, 0.0], iidx:5, clst:["b", "g", "b", "!"], pram:1, actn:usee, actc:niln)
+                                .padding(.trailing, 1.0).padding(.top, 1.0).offset(x:13.00, y:39.00)
+                        )
+                    }.frame(width:240.0).offset(x:0.09, y:offs)
+                    HStack {  }.overlay(
+                        HStack {
+                            butv(kind:"asterisk.circle", size:26.0, extr:[epad*spcr, 0.0], iidx:6, clst:["b", "g", "b", "!"], pram:-1, actn:star, actc:niln)
+                            butv(kind:"viewfinder.circle", size:26.0, extr:[epad*spcr, 0.0], iidx:7, clst:["b", "g", "b", "!"], pram:-1, actn:fndr, actc:niln)
+                            butv(kind:fsci(), size:26.0, extr:[epad*spcr, 0.0], iidx:8, clst:["b", "g", "b", "~"], pram:-1, actn:fsca, actc:fscz)
+                            butv(kind:fsbi(), size:26.0, extr:[epad*spcr, 0.0], iidx:9, clst:["b", "g", "b", "~"], pram:-1, actn:fsba, actc:fsbz)
+                        }.frame(width:1.0, height:1.0).offset(x:-11.00, y:25.00+offs)
+                    )
+                }.offset(x:0.09, y:-17.99)
+                HStack {  }.padding(.leading, 36.0)
+            })
         }
         return vobj
     }
 
     func colv() -> AnyView {
         var vobj = AnyView(EmptyView())
-        if (tsho == "on") {
+        if ((shwc == true) && (shwm == false)) {
             vobj = AnyView(HStack {
                 ZStack {
                     HStack {
@@ -1803,7 +2302,7 @@ struct ContentView: View {
                                     for item in cobt {
                                         if (item.id == vals.first) {
                                             if (item.albm != "---") {
-                                                for elem in baup {
+                                                for elem in nobj.view_baup {
                                                     if ((elem.band == item.band) && (elem.albm == item.albm)) {
                                                         if (!(uniq.contains(elem.genr))) {
                                                             temp.append(elem)
@@ -1814,7 +2313,7 @@ struct ContentView: View {
                                                 flag = 1
                                             } else {
                                                 if (cobt.count > 1) {
-                                                    for elem in baup {
+                                                    for elem in nobj.view_baup {
                                                         if (elem.band == cobt[1].band) {
                                                             if (!(uniq.contains(elem.genr))) {
                                                                 temp.append(elem)
@@ -1861,26 +2360,531 @@ struct ContentView: View {
         return vobj
     }
 
-    func padd() {
-        if ((srch != "") && (name != "")) {
-            plst.append([name, srch, "f", "name"])
+    func tobv() -> AnyView {
+        var vobj = AnyView(EmptyView())
+        if (shwm == false) {
+            vobj = AnyView(HStack {
+                if let tabo = tabz {
+                    tabo.onAppear {
+                        let _ = tabo.cola({ c, r, v, k, w, z, s, e in
+                            if ((c == 0) || (r == 0)) {
+                                let u = UUID(uuidString:v)
+                                var n = "circle.dotted"
+                                var l = 17.0
+                                if ((u != nil) && (s != nil) && (u! == s!)) {
+                                    n = "asterisk.circle"
+                                    l = 19.0
+                                }
+                                return AnyView(VStack(spacing:0) {
+                                    Spacer()
+                                    HStack {
+                                        txtv(strs:" ", size:9.0, colr:z, kind:1, bold:1).overlay(ZStack {
+                                            HStack {
+                                                if (r == 0) {
+                                                    Image(systemName:n).resizable().scaledToFit().frame(width:l, height:l).foregroundColor(z).offset(x:5.0)
+                                                }
+                                            }
+                                        }.zIndex(9.0))
+                                    }
+                                    Spacer()
+                                })
+                            }
+                            if ((c > 0) || (r > 0)) {
+                                let sizw = (w + e)
+                                let clst = [5, 6, 7]
+                                let alin = (clst.contains(c) || clst.contains(r)) ? 0 : 1
+                                let kind = ((c > 0) || clst.contains(c) || clst.contains(r)) ? 1 : 0
+                                let bold = (kind == 1) ? 1 : 0
+                                var size = (r > 0) ? 13.0 : 15.0
+                                let offw = ((c > 0) && (alin == 0)) ? -1.19 * e : 0.00
+                                if (clst.contains(r)) { size = (size - 0.99) }
+                                return AnyView(VStack(spacing:0) {
+                                    Spacer()
+                                    HStack {
+                                        txtv(strs:" ", size:11.0, colr:z, kind:1, bold:1).frame(width:sizw).overlay(ZStack {
+                                            HStack {
+                                                txtv(strs:v, size:size, colr:z, kind:kind, bold:bold).frame(width:sizw, alignment:(alin == 0) ? .center : .leading).offset(x:offw).overlay(ZStack {
+                                                    HStack {
+                                                        if (c > 0) {
+                                                            if (e > 0.0) {
+                                                                let n = (!(nobj.view_srtz.lowercased().contains("reverse"))) ? "chevups.png" : "chevdos.png"
+                                                                let i = NSImage(named:n)
+                                                                Spacer()
+                                                                Image(nsImage:i!).resizable().renderingMode(.template).scaledToFit().frame(width:19.00, height:19.00).foregroundColor(z).offset(x:(e/1.99), y:-0.69)
+                                                            }
+                                                        }
+                                                    }
+                                                })
+                                            }.onContinuousHover { phase in
+                                                if (c > 0) {
+                                                    switch phase {
+                                                    case .active:
+                                                        if (nobj.view_tabb.clrs.head_high_indx != c) { nobj.view_tabb.clrs.head_high_indx = c }
+                                                    case .ended:
+                                                        nobj.view_tabb.clrs.head_high_indx = -1
+                                                    }
+                                                }
+                                            }
+                                        })
+                                    }
+                                    Spacer()
+                                })
+                            }
+                            return AnyView(EmptyView())
+                        }).pact({
+                            var iidx = 0
+                            for item in nobj.view_baup {
+                                if ((nobj.view_sels != nil) && (nobj.view_sels! == item.id)) {
+                                    nobj.halt()
+                                    nobj.indx = iidx
+                                    bply(-1)
+                                }
+                                iidx += 1
+                            }
+                        })
+                    }.onChange(of:nobj.view_refl) {
+                        let _ = tabo.load(nobj.view_tabl, iden:\mdat.id, colz:colu)
+                        refr = UUID()
+                    }.onChange(of:nobj.view_sees) {
+                        refr = UUID()
+                    }.onChange(of:nobj.view_sels) {
+                        refr = UUID()
+                    }.onChange(of:nobj.view_scro) {
+                        refr = UUID()
+                    }.onChange(of:nobj.view_srtz) {
+                        nobj.glob().withLock {
+                            if (pidx < 0) {
+                                nobj.view_srts = nobj.gens(inpt:nobj.view_srtz)
+                                nobj.view_baup.sort(using:nobj.view_srts)
+                                if (nobj.view_srch == "") { nobj.view_tabl = nobj.view_baup }
+                                nobj.sync(inpt:nobj.view_baup)
+                            } else {
+                                if ((-1 < pidx) && (pidx < plst.count)) {
+                                    plst[pidx][4] = nobj.view_srtz
+                                }
+                            }
+                            srtz = nobj.view_srtz
+                            refr = UUID()
+                        }
+                    }.onChange(of:nobj.view_tabb.cols.ordr) {
+                        cord = nobj.view_tabb.cols.ordr
+                    }.onChange(of:nobj.view_tabb.cols.sizs) {
+                        csiz = nobj.view_tabb.cols.sizs
+                    }.onChange(of:nobj.view_tabb.cols.hist) {
+                        chis = nobj.view_tabb.cols.hist
+                    }.onKeyPress(action:{ pres in
+                        keyp(pres:pres)
+                        return .handled
+                    }).frame(minHeight:400.0)
+                        .padding(EdgeInsets(top:-7.9, leading:11.0, bottom:11.0, trailing:11.0))
+                        .focusable().focusEffectDisabled().focused($isfo)
+                        .zIndex(1.0)
+                        .overlay(pref())
+                        .overlay(panv())
+                        .overlay(pana())
+                }
+            }.id(refr))
+        }
+        return vobj
+    }
+
+    func botv() -> AnyView {
+        var vobj = AnyView(EmptyView())
+        if (shwm == false) {
+            vobj = AnyView(HStack {
+                HStack {
+                    HStack {
+                        HStack {
+                            Spacer()
+                            let snum = (nobj.view_tabl.count > 0) ? nobj.view_tabl.count : nobj.plen
+                            let stts = snum.formatted().replacingOccurrences(of:",", with:",")
+                            let strv = String(format:"%@  Tracks", stts)
+                            txtv(strs:strv, size:15.0, colr:colr(k:"t"), kind:3, bold:0)
+                        }.frame(maxWidth:.infinity).offset(y:0.09)
+                        HStack {
+                            /*Rectangle().frame(width:1.0, height:1.0).foregroundColor(noco())
+                             .overlay(RoundedRectangle(cornerRadius:1.0).frame(width:1.9, height:19.0).foregroundColor(colr(k:"t"))*/
+                            if let imgo = imgs() {
+                                Rectangle().frame(width:1.0, height:1.0).foregroundColor(noco()).padding(EdgeInsets(top:0.0, leading:19.0, bottom:0.0, trailing:19.0)).overlay(
+                                    imgo.resizable().frame(width:45.0, height:45.0).opacity(0.75)
+                                        .rotationEffect(.degrees(nobj.view_rota)).onChange(of:nobj.view_rotf) {
+                                            if ((nobj.view_rotf % 2) != 0) {
+                                                withAnimation(.linear(duration:1).speed(0.15).repeatForever(autoreverses:false)) {
+                                                    nobj.view_rota = 360.0
+                                                }
+                                            } else {
+                                                withAnimation(.linear(duration:0)) {
+                                                    nobj.view_rota = 0.0
+                                                }
+                                            }
+                                        })
+                            }
+                        }.padding(EdgeInsets(top:0.0, leading:11.0, bottom:0.0, trailing:11.0)).offset(y:-1.99)
+                        HStack {
+                            let strv = String(format:"TurnTable  %@", String().version())
+                            txtv(strs:strv, size:15.0, colr:colr(k:"t"), kind:3, bold:0)
+                            Spacer()
+                        }.frame(maxWidth:.infinity).offset(y:0.09)
+                    }.offset(x:-7.99, y:-7.99)
+                    HStack {
+                        Rectangle().frame(width:1.0, height:37.99).foregroundColor(noco()).overlay(ProgressView().scaleEffect(x:0.69, y:0.69, anchor:.center).offset(x:-25.99, y:-7.99))
+                    }.opacity(nobj.view_opap)
+                }.onHover { over in
+                    let iidx = idxs[4]
+                    shwp = false
+                    clrs[iidx][2] = (clrs[iidx][0] + clrs[iidx][5])
+                }
+            })
+        }
+        return vobj
+    }
+
+    func pana() -> AnyView {
+        var vobj = AnyView(EmptyView())
+        if (shwa == true) {
+            let size = 192.0
+            let smol = 48.0
+            let bpad = 64.0
+            let tpad = (shwp == false) ? 55.0 : 256.0 + 42.0
+            let rads = 17.0
+            let zclr = "g"
+            vobj = AnyView(
+                ZStack {
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            VStack {
+                                RoundedRectangle(cornerRadius:rads).inset(by:-1.0)
+                                    .stroke(colr(k:zclr), lineWidth:2.33)
+                                    .overlay(
+                                        VStack {
+                                            VStack {
+                                                if let hold = nobj.geth() {
+                                                    let temp = hold.covr.data(using:.utf8)
+                                                    if let data = Data(base64Encoded:temp!) {
+                                                        if let nimg = NSImage(data:data) {
+                                                            Image(nsImage:nimg).resizable().frame(maxWidth:.infinity, maxHeight:.infinity)
+                                                        } else if let imgo = imgs() {
+                                                            imgo.resizable().frame(width:size-smol, height:size-smol)
+                                                        }
+                                                    } else if let imgo = imgs() {
+                                                        imgo.resizable().frame(width:size-smol, height:size-smol)
+                                                    }
+                                                } else if let imgo = imgs() {
+                                                    imgo.resizable().frame(width:size-smol, height:size-smol)
+                                                }
+                                            }
+                                        }.frame(maxWidth:.infinity, maxHeight:.infinity).background(colr(k:"s")).cornerRadius(rads)
+                                    )
+                            }.frame(width:size, height:size).padding(.bottom, bpad).padding(.trailing, tpad)
+                        }
+                    }
+                }.zIndex(77.0)
+            )
+        }
+        return vobj
+    }
+
+    func panv() -> AnyView {
+        var vobj = AnyView(EmptyView())
+        if (shwp == true) {
+            //let side = [0.0, 0.0, 0.0]
+            let side = [65.0, 105.0, 11.0]
+            let wide = 256.0
+            let tpad = 45.0
+            let bpad = 75.0
+            let rads = 17.0
+            let zclr = "g"
+            vobj = AnyView(
+                ZStack {
+                    HStack {
+                        VStack {
+                            HStack {
+                                Spacer()
+                                ZStack {
+                                    VStack {
+                                        RoundedRectangle(cornerRadius:rads).inset(by:-1.0)
+                                            .stroke(colr(k:zclr), lineWidth:2.33)
+                                            .overlay(
+                                                HStack {
+                                                    VStack {
+                                                        HStack {
+                                                            let iidx = idxs[3]
+                                                            Spacer()
+                                                            TextField("Playlist", text:$name)
+                                                                .onChange(of:name) { olds, vals in
+                                                                    if (name == "") {
+                                                                        clrs[iidx][2] = clrs[iidx][0]
+                                                                        usee(8)
+                                                                    } else {
+                                                                        clrs[iidx][2] = clrs[iidx][1]
+                                                                    }
+                                                                }
+                                                                .frame(width:128.0)
+                                                                .showClearButton($name)
+                                                                .foregroundColor(colr(k:"t"))
+                                                                .disableAutocorrection(true)
+                                                                .textFieldStyle(.plain)
+                                                                .font(Font.custom("Menlo", size:13.0).weight(.bold))
+                                                                .padding(EdgeInsets(top:1.5, leading:12.0, bottom:1.5, trailing:24.0))
+                                                                .overlay(RoundedRectangle(cornerRadius:9.0).inset(by:-3.5).stroke(colr(k:clrs[iidx][2]), lineWidth:3.0))
+                                                                .offset(x:3.0, y:0.5)
+                                                            Rectangle().foregroundColor(noco()).frame(width:1.0, height:1.0)
+                                                            butv(kind:"plus.circle", size:24.0, extr:[0.0, 0.0], iidx:11, clst:["b", "g", "b", "!"], pram:-1, actn:padd, actc:niln)
+                                                            Rectangle().foregroundColor(noco()).frame(width:5.9, height:1.0)
+                                                        }
+                                                        HStack {
+                                                            butv(kind:"a.circle", size:20.0, extr:[0.0, 0.0], iidx:16, clst:["fa", "g", "fa", "!"], pram:0, actn:helb, actc:niln)
+                                                            butv(kind:"b.circle", size:20.0, extr:[0.0, 0.0], iidx:17, clst:["fb", "g", "fb", "!"], pram:1, actn:helb, actc:niln)
+                                                            butv(kind:"g.circle", size:20.0, extr:[0.0, 0.0], iidx:18, clst:["fg", "g", "fg", "!"], pram:2, actn:helb, actc:niln)
+                                                            butv(kind:"y.circle", size:20.0, extr:[0.0, 0.0], iidx:19, clst:["fo", "g", "fo", "!"], pram:3, actn:helb, actc:niln)
+                                                        }.padding(EdgeInsets(top:4.0, leading:0.0, bottom:16.0, trailing:0.0))
+                                                        List {
+                                                            ForEach(0..<plst.count, id:\.self) { i in
+                                                                HStack {
+                                                                    txtv(strs:plst[i][0], size:15.0, colr:colr(k:"t"), kind:0, bold:0).padding(.leading, 8.0)
+                                                                    Spacer()
+                                                                    butv(kind:"pencil.circle", size:20.0, extr:[0.0, 0.0], iidx:300+i, clst:["b", "g", "b", "!"], pram:i, actn:pedt, actc:niln)
+                                                                    butv(kind:"multiply.circle", size:20.0, extr:[0.0, 0.0], iidx:500+i, clst:["b", "g", "b", "!"], pram:i, actn:pdel, actc:niln)
+                                                                }.padding(EdgeInsets(top:4.0, leading:0.0, bottom:4.0, trailing:8.0)).cornerRadius(15.0).background(pcol(iidx:i)).listRowSeparator(.hidden)
+                                                                    .contentShape(Rectangle()).onTapGesture {
+                                                                        psel(iidx:i)
+                                                                    }
+                                                            }
+                                                            Spacer()
+                                                        }.scrollIndicators(.never).scrollContentBackground(.hidden).background(noco()).frame(maxHeight:.infinity)
+                                                            .padding(EdgeInsets(top:0.0, leading:0.0, bottom:8.0, trailing:-9.0))
+                                                    }
+                                                }.frame(maxWidth:.infinity, maxHeight:.infinity).padding(.top, 12.0).padding(.trailing, side[0]).background(colr(k:"s")).cornerRadius(rads)
+                                            )
+                                        Rectangle().foregroundColor(noco()).frame(width:1.0, height:bpad)
+                                    }
+                                }.frame(width:wide+side[0]).offset(x:-45.0+side[1], y:tpad)
+                            }
+                            Spacer()
+                        }
+                        if (side[0] != 0.0) {
+                            ZStack { Rectangle().frame(width:1.0).foregroundColor(noco()).overlay(
+                                RoundedRectangle(cornerRadius:9.0).frame(width:45.0).frame(maxHeight:.infinity)
+                                    .padding(EdgeInsets(top:25.0, leading:0.0, bottom:25.0, trailing:0.0)).offset(x:side[2], y:-5.0)
+                                    .foregroundColor(colr(k:"s"))
+                            ) }.zIndex(55.0)
+                        }
+                    }
+                }.zIndex(33.0)
+            )
+        }
+        return vobj
+    }
+
+    func pref() -> AnyView {
+        var vobj = AnyView(EmptyView())
+        if (shws == true) {
+            let side = [0.0, 0.0, 0.0]
+            let tpad = 45.0
+            let bpad = 75.0
+            let wpad = 80.0
+            let rads = 17.0
+            let maxh = 75.0
+            let maxw = 115.0
+            let spcb = 8.0
+            let zclr = "g"
+            vobj = AnyView(
+                ZStack {
+                    HStack {
+                        VStack {
+                            HStack {
+                                Spacer()
+                                ZStack {
+                                    VStack {
+                                        RoundedRectangle(cornerRadius:rads).inset(by:-1.0)
+                                            .stroke(colr(k:zclr), lineWidth:2.33)
+                                            .overlay(
+                                                VStack {
+                                                    VStack {
+                                                        HStack {
+                                                            Spacer()
+                                                            txtv(strs:"Settings", size:19.0, colr:colr(k:"t"), kind:0, bold:1)
+                                                            Spacer()
+                                                        }.padding(.bottom, 28.0)
+                                                        HStack {
+                                                            VStack {
+                                                                Spacer()
+                                                                HStack {
+                                                                    txtv(strs:"Colors", size:15.0, colr:colr(k:"t"), kind:0, bold:1)
+                                                                    Text(" ")
+                                                                    butv(kind:"multiply.circle", size:20.0, extr:[0.0, 0.0], iidx:91, clst:["b", "g", "b", "~"], pram:-1, actn:nilz, actc:nilc)
+                                                                    Spacer()
+                                                                }
+                                                                Spacer()
+                                                            }.frame(maxWidth:maxw).frame(maxHeight:maxh)
+                                                            Text(" ")
+                                                            Text(" ")
+                                                            VStack {
+                                                                Spacer()
+                                                                let clst = ["Base", "High", "Text", "Tint", "View", "List", "Blur", "Head"]
+                                                                let numr = 2
+                                                                let half = ((clst.count/numr)+(clst.count%numr))
+                                                                ForEach(0..<numr, id:\.self) { j in
+                                                                    HStack {
+                                                                        ForEach(0..<half, id:\.self) { i in
+                                                                            let iidx = ((j * half) + i)
+                                                                            if (iidx < clst.count) {
+                                                                                txtv(strs:clst[iidx], size:13.0, colr:colr(k:"t"), kind:0, bold:1)
+                                                                                ColorPicker("", selection:$clco[iidx]).onChange(of:clco[iidx]) {
+                                                                                    let temp = NSColor(clco[iidx])
+                                                                                    clno[iidx] = [temp.alphaComponent, temp.redComponent, temp.greenComponent, temp.blueComponent, temp.alphaComponent]
+                                                                                    refz()
+                                                                                }
+                                                                                Text(" ")
+                                                                            }
+                                                                        }
+                                                                        Spacer()
+                                                                    }
+                                                                }
+                                                                Spacer()
+                                                            }.frame(maxHeight:maxh)
+                                                            Spacer()
+                                                        }.padding(.bottom, spcb)
+                                                        HStack {
+                                                            var nice = round(wina[2] * 100)
+                                                            VStack {
+                                                                Spacer()
+                                                                HStack {
+                                                                    txtv(strs:"Window", size:15.0, colr:colr(k:"t"), kind:0, bold:1)
+                                                                    Text(" ")
+                                                                    butv(kind:"multiply.circle", size:20.0, extr:[0.0, 0.0], iidx:90, clst:["b", "g", "b", "!"], pram:-1, actn:zilw, actc:niln)
+                                                                    Spacer()
+                                                                }
+                                                                Spacer()
+                                                            }.frame(maxWidth:maxw).frame(maxHeight:maxh)
+                                                            Text(" ")
+                                                            Text(" ")
+                                                            VStack {
+                                                                Spacer()
+                                                                HStack {
+                                                                    txtv(strs:"View", size:13.0, colr:colr(k:"t"), kind:0, bold:1)
+                                                                    Text(" ")
+                                                                    Slider(value:$wina[0], in:69...99, step:1).frame(width:128.0).onChange(of:wina[0]) {
+                                                                        winc = colr(k:"a")
+                                                                        wins = 1
+                                                                    }
+                                                                    txtv(strs:"\(Int(wina[0]))", size:13.0, colr:colr(k:"t"), kind:0, bold:1)
+                                                                    Text(" ")
+                                                                    Text(" ")
+                                                                    txtv(strs:"Blur", size:13.0, colr:colr(k:"t"), kind:0, bold:1)
+                                                                    Text(" ")
+                                                                    Slider(value:$wina[1], in:0...5, step:1).frame(width:128.0).onChange(of:wina[1]) {
+                                                                        wins = 2
+                                                                    }
+                                                                    Spacer()
+                                                                }
+                                                                HStack {
+                                                                    txtv(strs:"Text", size:13.0, colr:colr(k:"t"), kind:0, bold:1)
+                                                                    Text(" ")
+                                                                    Slider(value:$wina[3], in:59...89, step:1).frame(width:128.0).onChange(of:wina[3]) {
+                                                                        wins = 4
+                                                                        refz()
+                                                                    }
+                                                                    txtv(strs:"\(Int(wina[3]))", size:13.0, colr:colr(k:"t"), kind:0, bold:1)
+                                                                    Text(" ")
+                                                                    Text(" ")
+                                                                    txtv(strs:"Hover", size:13.0, colr:colr(k:"t"), kind:0, bold:1)
+                                                                    Text(" ")
+                                                                    Slider(value:$wina[2], in:-0.19...0.19, step:0.001).frame(width:128.0).onChange(of:wina[2]) {
+                                                                        nice = round(wina[2] * 100)
+                                                                        wina[2] = (Double(nice) / 100)
+                                                                        wins = 3
+                                                                    }
+                                                                    let outs = String(format:"%@0.%02d", (nice < 0.0) ? "-" : "+", Int(abs(nice)))
+                                                                    txtv(strs:"\(outs)", size:13.0, colr:colr(k:"t"), kind:0, bold:1)
+                                                                    Spacer()
+                                                                }
+                                                                Spacer()
+                                                            }.frame(maxHeight:maxh)
+                                                            Spacer()
+                                                        }.padding(.bottom, spcb)
+                                                        HStack {
+                                                            VStack {
+                                                                Spacer()
+                                                                HStack {
+                                                                    txtv(strs:"Theme", size:15.0, colr:colr(k:"t"), kind:0, bold:1)
+                                                                    Spacer()
+                                                                }
+                                                                Spacer()
+                                                            }.frame(maxWidth:maxw).frame(maxHeight:maxh)
+                                                            Text(" ")
+                                                            Text(" ")
+                                                            VStack {
+                                                                Spacer()
+                                                                HStack {
+                                                                    txtv(strs:"List", size:13.0, colr:colr(k:"t"), kind:0, bold:1)
+                                                                    Text(" ")
+                                                                    Picker(selection:$rows, label:Text("")) {
+                                                                        ForEach(0..<rowl.count, id:\.self) {
+                                                                            Text(rowl[$0].capitalized)
+                                                                        }
+                                                                    }.pickerStyle(.segmented).frame(width:128.0).offset(x:-9.99)
+                                                                        .onChange(of:rows) {
+                                                                            nobj.view_tabb.clrs.data_rows_type = rowl[rows]
+                                                                        }
+                                                                    Text(" ")
+                                                                    Text(" ")
+                                                                    txtv(strs:"Mode", size:13.0, colr:colr(k:"t"), kind:0, bold:1)
+                                                                    Text(" ")
+                                                                    Picker(selection:$mods, label:Text("")) {
+                                                                        ForEach(0..<styl.count, id:\.self) {
+                                                                            Text(styl[$0].capitalized)
+                                                                        }
+                                                                    }.pickerStyle(.segmented).frame(width:128.0).offset(x:-9.99)
+                                                                        .onChange(of:mods) {
+                                                                            refz()
+                                                                        }
+                                                                    Spacer()
+                                                                }
+                                                                Spacer()
+                                                            }.frame(maxHeight:maxh)
+                                                            Spacer()
+                                                        }.padding(.bottom, spcb)
+                                                        Spacer()
+                                                    }.padding(.leading, 16.0)
+                                                    Spacer()
+                                                }.frame(maxWidth:.infinity, maxHeight:.infinity).padding(.top, 12.0).padding(.trailing, side[0]).background(colr(k:"s")).cornerRadius(rads)
+                                            )
+                                        Rectangle().foregroundColor(noco()).frame(width:1.0, height:bpad)
+                                    }
+                                }.padding(.leading, 89.0+wpad).offset(x:-45.0+side[1], y:tpad)
+                            }
+                            Spacer()
+                        }
+                    }
+                }.zIndex(11.0)
+            )
+        }
+        return vobj
+    }
+
+    func padd(_ args:Int) {
+        if ((nobj.view_srch != "") && (name != "")) {
+            plst.append([name, nobj.view_srch, "f", "name"])
         }
     }
 
-    func pdel(iidx:Int) {
+    func pdel(_ iidx:Int) {
         if ((-1 < iidx) && (iidx < plst.count)) {
             plst.remove(at:iidx)
-            usee(mode:9)
+            usee(7)
         }
     }
 
-    func pedt(iidx:Int) {
-        if ((srch != "") && (name != "")) {
+    func pedt(_ iidx:Int) {
+        if ((nobj.view_srch != "") && (name != "")) {
             if ((-1 < iidx) && (iidx < plst.count)) {
                 if (plst[iidx].count < 3) { plst[iidx].append("f") }
                 if (plst[iidx].count < 4) { plst[iidx].append("name") }
                 plst[iidx][0] = name
-                plst[iidx][1] = srch
+                plst[iidx][1] = nobj.view_srch
             }
         }
     }
@@ -1889,18 +2893,16 @@ struct ContentView: View {
         if ((-1 < iidx) && (iidx < plst.count)) {
             if (plst[iidx].count < 3) { plst[iidx].append("f") }
             if (plst[iidx].count < 4) { plst[iidx].append("name") }
-            print("DEBUG","PLST",plst[iidx])
             pidx = iidx
             name = plst[pidx][0]
-            srch = plst[pidx][1]
-            if (plst[pidx][2] == "f") { shuf[1] = false }
-            else { shuf[1] = true }
-            let _ = shfu()
+            nobj.view_srch = plst[pidx][1]
+            if (plst[pidx][2] == "f") { nobj.view_shuf[1] = false }
+            else { nobj.view_shuf[1] = true }
         }
     }
 
     func pcol(iidx:Int) -> Color {
-        if ((srch != "") && (name != "")) {
+        if ((nobj.view_srch != "") && (name != "")) {
             if (iidx == pidx) { return colr(k:"z") }
         }
         return noco()
@@ -1918,11 +2920,10 @@ struct ContentView: View {
                 limi = 2
             }
             while (bldr[kind].count > limi) { bldr[kind].removeLast() }
-            sell = nil
-            sels.removeAll()
-        } else if (sell != nil) {
-            for item in baup {
-                if (item.id == sell!) {
+            nobj.view_sels = nil
+        } else if (nobj.view_sels != nil) {
+            for item in nobj.view_baup {
+                if (item.id == nobj.view_sels!) {
                     let valu = [item.band, item.albm, item.genr, item.year]
                     if ((valu[kind] != "") && (valu[kind] != "---")) {
                         if (!(bldr[kind].contains(valu[kind]))) {
@@ -1950,115 +2951,114 @@ struct ContentView: View {
                 regx = (regx + line)
             }
         }
-        srch = regx
+        nobj.view_srch = regx
     }
 
-    func shot() {
-        if (tsho == "no") { tsho = "on" }
-        else { tsho = "no" }
+    func helb(_ kind:Int) {
+        help(kind:kind, colv:"")
     }
 
-    func usee(mode:Int) {
+    func usee(_ mode:Int) {
         isfo = true
-        sell = nil
-        sels.removeAll()
+        nobj.view_tabb.isfo += 1
         coas.removeAll()
         cobs.removeAll()
         cocs.removeAll()
-        srch = ""
+        nobj.view_srch = ""
         name = ""
-        if (mode == 9) {
-            shuf[1] = false
-            let _ = shfu()
+        wini = [0, 0, 0, 0]
+        if (mode >= 5) {
+            nobj.view_shuf[1] = false
             if (pidx > -1) {
-                let gsrt = nobj.gens(inpt:srtz)
+                let gsrt = nobj.gens(inpt:nobj.view_srtz)
                 nobj.glob().withLock {
-                    tabl.sort(using:gsrt)
+                    nobj.view_tabl.sort(using:gsrt)
                 }
                 pidx = -1
             }
-        }
-    }
-
-    func shfu() -> Bool {
-        let iidx = idxs[1]
-        if ((shuf[0] == false) && (shuf[1] == false)) {
-            clrs[iidx][2] = (clrs[iidx][0] + clrs[iidx][5])
-            return false
         } else {
-            clrs[iidx][2] = (clrs[iidx][1] + clrs[iidx][5])
-            return true
+            nobj.view_sels = nil
+            nobj.view_scro = nil
         }
     }
 
-    func shfs() {
+    func shfs(_ args:Int) {
         var iidx = 0
         if (pidx > -1) {
             if ((-1 < pidx) && (pidx < plst.count)) {
                 if (plst[pidx][2] == "f") {
-                    shuf[1] = false
+                    nobj.view_shuf[1] = false
                     plst[pidx][2] = "t"
                 } else {
-                    shuf[1] = true
+                    nobj.view_shuf[1] = true
                     plst[pidx][2] = "f"
                 }
             }
             iidx = 1
         }
-        if (shuf[iidx] == false) { shuf[iidx] = true }
-        else { shuf[iidx] = false }
-        let _ = shfu()
+        if (nobj.view_shuf[iidx] == false) { nobj.view_shuf[iidx] = true }
+        else { nobj.view_shuf[iidx] = false }
     }
 
     func refz() {
         sldv = [colr(k:"b"), colr(k:"b"), colr(k:"bh"), colr(k:"bh")]
         sldr = [colr(k:"t"), colr(k:"b"), colr(k:"th"), colr(k:"bh")]
         winc = colr(k:"a")
-        wins = 3
+        nobj.view_tabb.clrs.head_back = colr(k:"y")
+        nobj.view_tabb.clrs.data_back = colr(k:"w")
+        nobj.view_tabb.clrs.body_bord = colr(k:"b")
+        nobj.view_tabb.clrs.head_text = colr(k:"l")
+        nobj.view_tabb.clrs.head_line_colr = colr(k:"l")
+        nobj.view_tabb.clrs.head_divr_colr = colr(k:"l")
+        nobj.view_tabb.clrs.head_high_text = colr(k:"lh")
+        nobj.view_tabb.clrs.head_high_back = colr(k:"yh")
+        nobj.view_tabb.clrs.data_text = colr(k:"l")
+        nobj.view_tabb.clrs.data_line_colr = colr(k:"l")
+        nobj.view_tabb.clrs.data_high = colr(k:"b")
+        wins = 9
         imgl = 0
     }
 
-    func nilz() {
-        cbno = [0.0, 0.0, 0.0, 0.0, 0.0]
-        cbco = Color.clear
-        chno = [0.0, 0.0, 0.0, 0.0, 0.0]
-        chco = Color.clear
-        ctno = [0.0, 0.0, 0.0, 0.0, 0.0]
-        ctco = Color.clear
-        cuno = [0.0, 0.0, 0.0, 0.0, 0.0]
-        cuco = Color.clear
-        cvno = [0.0, 0.0, 0.0, 0.0, 0.0]
-        cvco = Color.clear
-        clno = [0.0, 0.0, 0.0, 0.0, 0.0]
-        clco = Color.clear
-        crno = [0.0, 0.0, 0.0, 0.0, 0.0]
-        crco = Color.clear
+    func nilc() -> Int {
+        for item in clno {
+            if (item[0] != 0.0) { return 1 }
+        }
+        return 0
     }
 
-    func zilw() {
-        wini[0] = 0.0
-        wini[1] = 0.0
-        wini[2] = 0.19
+    func nilz(_ args:Int) {
+        var i = 0
+        let f = nilc()
+        for _ in clno {
+            if (f == 0) { clno[i][0] = clno[i][4] }
+            else { clno[i][0] = 0.0 }
+            i += 1
+        }
+        wins = 8
+        refz()
     }
 
-    func minv() {
-        let iidx = idxs[6]
+    func zilw(_ args:Int) {
+        wina[0] = 0.0
+        wina[1] = 0.0
+        wina[2] = 0.19
+        wina[3] = 0.0
+    }
+
+    func minv(_ args:Int) {
         if (volu[2] == 1.00) {
             mute = true
             volu[2] = 0.00
             nobj.plyr.volume = 0.00
-            clrs[iidx][2] = (clrs[iidx][1] + clrs[iidx][5])
         } else {
             mute = false
             volu[1] = 0.00
             volu[0] = 0.00
             nobj.plyr.volume = 0.00
-            clrs[iidx][2] = (clrs[iidx][0] + clrs[iidx][5])
         }
     }
 
-    func maxv() {
-        let iidx = idxs[6]
+    func maxv(_ args:Int) {
         if (volu[2] == 1.00) {
             volu[1] = 1.00
             volu[0] = 1.00
@@ -2066,39 +3066,46 @@ struct ContentView: View {
             volu[1] = 1.00
             volu[0] = 1.00
         }
-        mute = true
+        mute = false
         volu[2] = 1.00
         nobj.plyr.volume = Float(volu[1])
-        clrs[iidx][2] = (clrs[iidx][0] + clrs[iidx][5])
     }
 
-    func nill() {
-        print(Date(),"DEBUG","noop")
+    func niln() -> Int {
+        print(Date(),"DEBUG","niln")
+        return -1
     }
 
     func noco() -> Color {
         return Color.init(red:0.0, green:0.0, blue:0.0, opacity:0.0)
     }
 
-    func butv(kind:String, size:CGFloat, extr:[CGFloat], iidx:Int, clst:[String], meth:Int, pram:Int, actn:@escaping () -> Void) -> some View {
+    func butv(kind:String, size:CGFloat, extr:[CGFloat], iidx:Int, clst:[String], pram:Int, actn:@escaping (Int) -> Void, actc:@escaping () -> Int) -> some View {
         let objc = Image(systemName:kind).resizable().scaledToFit().frame(width:size, height:size).foregroundColor(colr(k:clrs[iidx][2])).onAppear {
             clrs[iidx] = [clst[0], clst[1], clst[2], clst[3], "", ""]
+            let zidx = actc()
+            if (zidx > -1) {
+                clrs[iidx][2] = (clrs[iidx][zidx] + clrs[iidx][5])
+                idxf.append([iidx, actc])
+            }
         }.onTapGesture {
+            actn(pram)
             let fstr = clrs[iidx][2].fstrs(char:"h")
             let jidx = (fstr == clrs[iidx][0]) ? 1 : 0
             clrs[iidx][4] = clrs[iidx][jidx]
-            if (clrs[iidx][3] != "~") {
-                clrs[iidx][2] = (clrs[iidx][jidx] + clrs[iidx][5])
+            clrs[iidx][2] = (clrs[iidx][jidx] + clrs[iidx][5])
+            for item in idxf {
+                let yidx = item[0] as? Int
+                let meth = item[1] as? () -> Int
+                let xidx = yidx!
+                let zidx = meth!()
+                clrs[xidx][2] = (clrs[xidx][zidx] + clrs[xidx][5])
             }
             if (clrs[iidx][3] == "!") {
                 DispatchQueue.main.asyncAfter(deadline:.now() + 0.19) { clrs[iidx][2] = (clrs[iidx][0] + clrs[iidx][5]) }
             }
-            if (meth == -1) { actn() }
-            if (meth == 0) { help(kind:pram, colv:"") }
-            if (meth == 1) { pedt(iidx:pram) }
-            if (meth == 2) { pdel(iidx:pram) }
-            if (meth == 3) { usee(mode:pram) }
             isfo = true
+            nobj.view_tabb.isfo += 1
         }.onContinuousHover { phase in
             let fstr = clrs[iidx][2].fstrs(char:"h")
             switch phase {
@@ -2135,21 +3142,28 @@ struct ContentView: View {
     }
 
     func keyp(pres:KeyPress) {
-        let temp = pres.characters.data(using:.utf8)!
-        print(Date(),"DEBUG","CHAR",temp.hexs())
-        if (temp.count == 1) {
-            if (temp[0] == 32) { bply() }
-        } else if (temp.count == 3) {
-            if ((temp[0] == 239) && (temp[1] == 156)) {
-                if (temp[2] == 131) { more() }
-                if (temp[2] == 130) { prev() }
+        let mods = pres.modifiers.rawValue
+        let chrs = pres.characters.data(using:.utf8)!
+        print(Date(),"DEBUG","char",mods,chrs.hexs())
+        if (chrs.count == 1) {
+            if (chrs[0] == 32) { bply(-1) }
+        } else if (chrs.count == 3) {
+            if ((chrs[0] == 239) && (chrs[1] == 156)) {
+                if (chrs[2] == 131) {
+                    if (mods == 112) { seek(when:10) }
+                    else { more(-1) }
+                }
+                if (chrs[2] == 130) {
+                    if (mods == 112) { seek(when:-10) }
+                    else { prev(-1) }
+                }
             }
         }
     }
 
     func imgs() -> Image? {
-        let iidx = idxs[7]
-        let secs = Int(Date().timeIntervalSince1970)
+        let iidx = idxs[0]
+        let secs = 1970.time()
         if ((imgd == nil) || ((secs - imgl) >= 5)) {
             let size = 384.0
             let rest = ((512.0 - size) / 2.0)
