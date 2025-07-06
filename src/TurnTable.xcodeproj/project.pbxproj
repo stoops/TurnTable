@@ -251,7 +251,7 @@
 				CODE_SIGN_ENTITLEMENTS = TurnTable/TurnTable.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 11151;
+				CURRENT_PROJECT_VERSION = 11377;
 				DEVELOPMENT_TEAM = H8CRQ895A9;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -261,7 +261,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.1.151;
+				MARKETING_VERSION = 1.1.377;
 				PRODUCT_BUNDLE_IDENTIFIER = stoops.TurnTable;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -278,7 +278,7 @@
 				CODE_SIGN_ENTITLEMENTS = TurnTable/TurnTable.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 11151;
+				CURRENT_PROJECT_VERSION = 11377;
 				DEVELOPMENT_TEAM = H8CRQ895A9;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -288,7 +288,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.1.151;
+				MARKETING_VERSION = 1.1.377;
 				PRODUCT_BUNDLE_IDENTIFIER = stoops.TurnTable;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
