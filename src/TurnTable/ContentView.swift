@@ -13,7 +13,7 @@ import AVFoundation
 import AppKit
 
 extension String {
-    func version() -> String { return "1.1.377" }
+    func version() -> String { return "1.1.530" }
 }
 
 struct mdat: Identifiable {
@@ -40,13 +40,11 @@ struct tabs: View {
     @Binding var sels: UUID?
     @Binding var scro: UUID?
     @Binding var srts: String
+    @Binding var refr: UUID
 
     @State var sync = CGFloat.zero
-    @FocusState var isfo: Bool
-    @State var sell = [nil, nil] as [UUID?]
 
     @State var flag = 0
-    @State var refr = 0
     @State var srtw = 11.0
     @State var aftr = 11.0
     @State var radr = 9.0
@@ -58,8 +56,8 @@ struct tabs: View {
     @State var sizr = 0.79
     @State var rowr = 0.91
     @State var opac = 0.87
-    @State var last = 1970.secs()
     @State var insl = EdgeInsets(top:3.09, leading:3.09, bottom:3.09, trailing:3.09)
+    @State var refi = UUID()
 
     struct bind {
         struct mcol {
@@ -91,13 +89,18 @@ struct tabs: View {
             var data_rows_type = "rows"
         }
 
-        var isfo = 0
+        var lock = NSLock()
+
+        var last = 1970.secs()
         var iscr = 0
-        var isee = -1
-        var isrt = -1
-        var cols = mcol()
+        var seei = -1
+        var srti = -1
         var rows = [] as [[String]]
+        var sell = [nil, nil] as [UUID?]
+
+        var cols = mcol()
         var clrs = mclr()
+
         var cola = { (c:Int, r:Int, v:String, k:String, w:CGFloat, z:Color, s:UUID?, e:CGFloat) in
             if ((c > 0) || (r > 0)) { return AnyView(Text(v).foregroundColor(z).frame(width:w, alignment:.leading)) }
             else { return AnyView(Text(" ").foregroundColor(z)) }
@@ -120,7 +123,6 @@ struct tabs: View {
         func main<Data>(_ data:Data, colz:KeyValuePairs<String,KeyPath<Data.Element, String>>, ordr:[Int], sizs:[CGFloat], hist:[[CGFloat]]) -> bind where Data : RandomAccessCollection {
             var outp = tabs.bind()
             let colt = outp.proc(data, colz:colz)
-            outp.isfo += 1
             outp.clrs = tabs.bind.mclr()
             outp.cols = tabs.bind.mcol(cols:colt[0], keys:colt[1], ordr:ordr, sizs:sizs, hist:hist)
             return outp
@@ -209,7 +211,7 @@ struct tabs: View {
                                         HStack {
                                             sepr(i:-1, h:sizh*sizr, e:true, w:geome.size.width, c:Color.clear).offset(y:-1*(offz/2.75))
                                             ForEach(0..<objc.cols.cols.count, id:\.self) { i in
-                                                cold(i:i+1, j:-1, w:geome.size.width, r:refr, c:Color.clear).offset(y:-0.99)
+                                                cold(i:i+1, j:-1, w:geome.size.width, c:Color.clear).offset(y:-0.99)
                                                 sepr(i:i+1, h:sizh*sizr, e:true, w:geome.size.width, c:objc.clrs.body_bord).offset(y:-1*(offz/2.75))
                                             }
                                             Color.clear.frame(width:aftr, height:1.0).contentShape(Rectangle())
@@ -220,7 +222,6 @@ struct tabs: View {
                                         Spacer()
                                     }
                                 }.foregroundColor(Color.clear).background(Color.clear)
-                                    .focusable().focusEffectDisabled().focused($isfo)
                                 Spacer()
                             }.frame(height:sizh+offz).padding(.top, offz)
                             VStack(spacing:0) {
@@ -238,7 +239,7 @@ struct tabs: View {
                                                 HStack {
                                                     sepr(i:-1, h:sizh*sizr, e:false, w:geome.size.width, c:Color.clear)
                                                     ForEach(0..<objc.rows[j].count, id:\.self) { i in
-                                                        rowd(i:i+1, j:j+1, w:geome.size.width, r:refr, c:Color.clear)
+                                                        rowd(i:i+1, j:j+1, w:geome.size.width, c:Color.clear)
                                                         sepr(i:i+1, h:sizh*sizr, e:false, w:geome.size.width, c:Color.clear)
                                                     }
                                                     Color.clear.frame(width:aftr, height:1.0).contentShape(Rectangle())
@@ -251,39 +252,40 @@ struct tabs: View {
                                                     .onTapGesture {
                                                         let secs = 1970.secs()
                                                         if (u != nil) {
-                                                            sels = u!
-                                                            sell.append(sels!)
-                                                            while (sell.count > 2) { sell.removeFirst() }
-                                                            if (sell[0] != nil) {
-                                                                if ((sell[0]! == sell[1]!) && ((secs - last) <= 0.50)) {
-                                                                    objc.pact()
+                                                            objc.lock.withLock {
+                                                                sels = u!
+                                                                objc.sell.append(sels!)
+                                                                while (objc.sell.count > 2) { objc.sell.removeFirst() }
+                                                                if ((objc.sell[0] != nil) && (objc.sell[1] != nil)) {
+                                                                    if ((objc.sell[0]! == objc.sell[1]!) && ((secs - objc.last) <= 0.50)) {
+                                                                        objc.pact()
+                                                                    }
                                                                 }
+                                                                objc.last = secs
                                                             }
                                                         }
-                                                        last = secs
                                                     }
                                                 line(i:-1, j:j, k:1, s:objc.clrs.data_line_wide, c:Color.clear, q:1)
                                             }
-                                        }.id(refr).background(GeometryReader { tempg in
+                                        }
+                                        .background(GeometryReader { tempg in
                                             Color.clear.preference(key:okey.self, value:-tempg.frame(in:.named("scro")).origin.x)
                                         }).onPreferenceChange(okey.self) { value in
                                             sync = value
                                         }
                                         Spacer()
                                     }.frame(minHeight:geome.size.height).padding(.top, offz/1.9)
-                                }.focusable().focusEffectDisabled().focused($isfo)
-                                    .coordinateSpace(name:"scro")
+                                }.coordinateSpace(name:"scro")
                             }.padding(.top, -1 * (offz*1.55))
-                            VStack(spacing:0) {  }.onChange(of:objc.iscr) {
+                            VStack(spacing:0) {  }
+                            .onChange(of:objc.iscr) {
                                 seek()
                                 if (scro != nil) {
                                     withAnimation {
                                         proxy.scrollTo(scro!, anchor:.leading)
                                     }
                                 }
-                            }.onChange(of:sels) {
-                                seek()
-                            }.onChange(of:srts) {
+                            }.onChange(of:refr) {
                                 seek()
                             }
                         }.foregroundColor(Color.clear).background(Color.clear)
@@ -305,12 +307,9 @@ struct tabs: View {
                 }
                 RoundedRectangle(cornerRadius:radi).inset(by:-1*0.09).stroke(objc.clrs.body_bord.opacity(opac), lineWidth:bord)
             } }
-        }.onChange(of:objc.isfo) {
-            isfo = (objc.isfo == 0) ? false : true
         }.padding(insl).onAppear {
             main(inpl:objc.cols.cols)
-            seek()
-            isfo = true
+            refr = UUID()
         }
     }
 
@@ -331,29 +330,26 @@ struct tabs: View {
     }
 
     func seek() {
-        var seei = -1
+        var sidx = -1
         if (sels != nil) {
             var ridx = 0
             for item in objc.rows {
                 let uidt = UUID(uuidString:item[0])
                 if ((uidt != nil) && (sels! == uidt!)) {
-                    seei = ridx
+                    sidx = ridx
                 }
                 ridx += 1
             }
-            scro = sels!
         }
-        objc.isee = seei
         var cidx = 0
         for item in objc.cols.keys {
             if (srts.lowercased().contains(item.lowercased())) {
-                objc.isrt = objc.cols.ordr[cidx]
+                objc.srti = objc.cols.ordr[cidx]
             }
             cidx += 1
         }
-        /*DispatchQueue.main.asyncAfter(deadline:.now() + 0.09) {
-            refr = 1970.time()
-        }*/
+        objc.seei = sidx
+        refi = UUID()
     }
 
     func perc(s:CGFloat, w:CGFloat, i:Int, n:Int) -> CGFloat {
@@ -425,7 +421,7 @@ struct tabs: View {
                             } else {
                                 objc.cols.sizs[j] = s
                             }
-                            refr = ((refr + 1) % 100000)
+                            seek()
                         }
                     }
                     .onEnded() { v in
@@ -441,18 +437,17 @@ struct tabs: View {
         })
     }
 
-    func cold(i:Int, j:Int, w:CGFloat, r:Int, c:Color) -> AnyView {
+    func cold(i:Int, j:Int, w:CGFloat, c:Color) -> AnyView {
         if (objc.cols.sizs.count < objc.cols.cols.count) {
             return AnyView(EmptyView())
         }
         let iidx = objc.cols.ordr[i-1]
         let strs = objc.cols.cols[iidx]
-        var sizt = objc.cols.sizs[iidx]
-        sizt = (sizt + (CGFloat(r % 1000) / 10000))
+        let sizt = objc.cols.sizs[iidx]
         let colr = (objc.clrs.head_high_indx != iidx) ? objc.clrs.head_text : objc.clrs.head_high_text
         let bgco = (objc.clrs.head_high_indx != iidx) ? Color.clear : objc.clrs.head_high_back
         let sizw = perc(s:(iidx > 0) ? sizt : 0.0, w:w, i:iidx, n:objc.cols.cols.count)
-        let srte = (objc.isrt == iidx) ? srtw : 0.0
+        let srte = (objc.srti == iidx) ? srtw : 0.0
         return AnyView(objc.cola(iidx, -1, objc.cols.cols[iidx], objc.cols.keys[iidx], sizw, colr, sees, srte)
             .contentShape(Rectangle())
             .background() {
@@ -464,7 +459,7 @@ struct tabs: View {
                     var dirs = (!(srts.lowercased().contains(defs)) ? defs : "reverse")
                     if (!(srts.lowercased().contains(prop))) { dirs = defs }
                     srts = (prop + ":" + dirs)
-                    objc.isrt = iidx
+                    objc.srti = iidx
                 }
             }.onDrag {
                 NSItemProvider(object:String((iidx > 0) ? strs : "---") as NSString)
@@ -472,15 +467,14 @@ struct tabs: View {
         )
     }
 
-    func rowd(i:Int, j:Int, w:CGFloat, r:Int, c:Color) -> AnyView {
+    func rowd(i:Int, j:Int, w:CGFloat, c:Color) -> AnyView {
         if (objc.cols.sizs.count < objc.cols.cols.count) {
             return AnyView(EmptyView())
         }
         let iidx = objc.cols.ordr[i-1]
-        var sizt = objc.cols.sizs[iidx]
-        sizt = (sizt + (CGFloat(r % 1000) / 10000))
+        let sizt = objc.cols.sizs[iidx]
         let sizw = perc(s:(iidx > 0) ? sizt : 0.0, w:w, i:iidx, n:objc.cols.cols.count)
-        let srte = (objc.isrt == iidx) ? srtw : 0.0
+        let srte = (objc.srti == iidx) ? srtw : 0.0
         return AnyView(objc.cola(-1 * j, iidx, objc.rows[j-1][iidx], objc.cols.keys[iidx], sizw, objc.clrs.data_text, sees, srte))
     }
 
@@ -509,8 +503,8 @@ struct tabs: View {
             if (objc.clrs.data_rows_type == "line") {
                 z = objc.clrs.body_bord
             }
-            if (objc.isee > -1) {
-                if ((j == (objc.isee - 1)) || (j == objc.isee)) {
+            if (objc.seei > -1) {
+                if ((j == (objc.seei - 1)) || (j == objc.seei)) {
                     z = Color.clear
                 }
             }
@@ -554,6 +548,7 @@ struct tabs: View {
         self.objc.cols.keys = colt[1]
         self.objc.rows = rowt
         self.objc.iscr += 1
+        refr = UUID()
         return self
     }
 
@@ -787,14 +782,36 @@ extension View {
     }
 }
 
-class note: NotificationCenter, @unchecked Sendable {
+class note: NotificationCenter, ObservableObject, @unchecked Sendable {
+    @Published var view_sels: UUID?
+    @Published var view_scro: UUID?
+    @Published var view_sees: UUID?
+    @Published var view_tabl = [] as [mdat]
+    @Published var view_baup = [] as [mdat]
+    @Published var view_coad = [] as [mdat]
+    @Published var view_cobd = [] as [mdat]
+    @Published var view_cocd = [] as [mdat]
+    @Published var view_cobt = [] as [mdat]
+    @Published var view_coct = [] as [mdat]
+    @Published var view_shuf = [false, false] as [Bool]
+    @Published var view_refl = 0
+    @Published var view_opap = 0.00
+    @Published var view_prog = 0.00 as CGFloat
+    @Published var view_rotf = 0
+    @Published var view_rota = 360.0
+    @Published var view_srch = ""
+    @Published var view_srtz = "band:forward"
+    @Published var view_time = ["", ""]
+    @Published var view_covr = ["", ""]
+    @Published var view_slir = [true, false, false]
+    @Published var view_srts = [] as [KeyPathComparator<mdat>]
+    @Published var view_tabb = tabs.bind()
 
     @AppStorage("ClassBook")
     var book: Data?
 
-    var view: ContentView?
-    let lock = NSLock()
-    let quel = NSLock()
+    var lock = NSLock()
+    var quel = NSLock()
     var ldat = 1970.date()
     var inil = [] as [String]
     var coaa = [] as [String]
@@ -806,6 +823,8 @@ class note: NotificationCenter, @unchecked Sendable {
     var taba = [] as [mdat]
     var tabp = [] as [mdat]
     var tabt = [] as [mdat]
+    var imgs = [] as [String]
+    var imgt = [] as [String]
     var pobj: AVPlayerItem?
     var plyr = AVPlayer()
     var save = [] as [mdat?]
@@ -821,16 +840,15 @@ class note: NotificationCenter, @unchecked Sendable {
     var indx = -1
 
     required override init() {
-        print(Date(),"DEBUG","init")
+        print(Date(),"INFO","init")
     }
 
-    func main(objc:ContentView) {
+    func main() {
         let lets = "0123456789ACBDEF"
         let rnds = String((0..<8).map{ _ in lets.randomElement()! })
         if (inil.isEmpty) {
             inil.append(rnds)
-            view = objc
-            print(Date(),"DEBUG","rand",rnds)
+            print(Date(),"INFO","rand",rnds)
             DispatchQueue.global(qos:.background).async { self.loop() }
         }
     }
@@ -870,16 +888,11 @@ class note: NotificationCenter, @unchecked Sendable {
 
     func getx() -> [mdat?] {
         var outp = [geth(), nil, nil]
-        let objc = view!
-        let sels = \ContentView.sels
-        let scro = \ContentView.scro
-        let selv = objc[keyPath:sels]
-        let scrv = objc[keyPath:scro]
         for item in tabp {
-            if ((selv != nil) && (item.id == selv!)) {
+            if ((view_sels != nil) && (item.id == view_sels!)) {
                 outp[1] = item
             }
-            if ((scrv != nil) && (item.id == scrv!)) {
+            if ((view_scro != nil) && (item.id == view_scro!)) {
                 outp[2] = item
             }
         }
@@ -940,28 +953,7 @@ class note: NotificationCenter, @unchecked Sendable {
     }
 
     func loop() {
-        let objc = view!
-        let opap = \ContentView.opap
-        let prog = \ContentView.prog
-        let time = \ContentView.time
-        let tabl = \ContentView.tabl
-        let tabb = \ContentView.tabb
-        let baup = \ContentView.baup
-        let srch = \ContentView.srch
-        let sees = \ContentView.sees
-        let sels = \ContentView.sels
-        let scro = \ContentView.scro
-        let srts = \ContentView.srts
-        let srtz = \ContentView.srtz
-        let slir = \ContentView.slir
-        let rotf = \ContentView.rotf
-        let rota = \ContentView.rota
-        let refl = \ContentView.refl
-        let coad = \ContentView.coad
-        let cobd = \ContentView.cobd
-        let cocd = \ContentView.cocd
-        let cobt = \ContentView.cobt
-        let coct = \ContentView.coct
+        let furl = FileManager.default.temporaryDirectory.appendingPathComponent("tt").appendingPathExtension("text")
         var csec = Int64(0)
         var cstr = form(inpt:csec)
         var tsec = Int64(0)
@@ -971,20 +963,34 @@ class note: NotificationCenter, @unchecked Sendable {
         var menl = 0
         while (0 == 0) {
             let secs = 1970.time()
+            let exis = FileManager.default.fileExists(atPath:furl.path)
+            if (exis) {
+                print(Date(),"INFO","wait",furl.path)
+                let _ = stop();
+                sleep(5);
+                continue;
+            }
             if ((secs - load) >= (15 * 60)) {
-                load = secs
                 flag = 0
                 loas = 1
                 outp = ""
                 save = getx()
-                objc[keyPath:opap] = 0.99
+                DispatchQueue.main.sync { self.view_opap = 0.99 }
                 DispatchQueue.global(qos:.background).async { self.proc() }
+                load = secs
             }
             let chks = gets()
-            if (chks > 0) { objc[keyPath:slir][0] = false }
-            else { objc[keyPath:slir][0] = true }
-            if ((chks == 1) && (objc[keyPath:rotf] != 1)) { objc[keyPath:rota] = 0.0 ; objc[keyPath:rotf] = 1 }
-            else if ((chks != 1) && (objc[keyPath:rotf] != 0)) { objc[keyPath:rota] = 360.0 ; objc[keyPath:rotf] = 0 }
+            if (chks > 0) { DispatchQueue.main.sync { self.view_slir[0] = false } }
+            else { DispatchQueue.main.sync { self.view_slir[0] = true } }
+            if ((chks == 1) && (view_rotf != 1)) {
+                DispatchQueue.main.sync {
+                    self.view_rota = 0.0 ; self.view_rotf = 1
+                }
+            } else if ((chks != 1) && (view_rotf != 0)) {
+                DispatchQueue.main.sync {
+                    self.view_rota = 360.0 ; self.view_rotf = 0
+                }
+            }
             if ((stat == 1) && (chks < 0)) {
                 let _ = next(iidx:1, over:1)
             }
@@ -997,82 +1003,78 @@ class note: NotificationCenter, @unchecked Sendable {
             }
             if (tsec > 1) {
                 if (pobj == nil) { csec = 0 }
-                if (objc[keyPath:slir][2]) {
-                    objc[keyPath:slir][2] = false
+                if (view_slir[2]) {
+                    DispatchQueue.main.sync { self.view_slir[2] = false }
                     seek = 1
                 }
-                if (objc[keyPath:slir][1] || (seek != 0)) {
+                if (view_slir[1] || (seek != 0)) {
                     seek = 1
-                    psec = (Double(objc[keyPath:prog]) * Double(tsec))
+                    psec = (Double(view_prog) * Double(tsec))
                     csec = Int64(psec)
                     cstr = form(inpt:csec)
-                    objc[keyPath:time][0] = cstr
-                    if (!objc[keyPath:slir][1]) {
+                    DispatchQueue.main.sync { self.view_time[0] = cstr }
+                    if (!view_slir[1]) {
                         if (csec >= 0) {
                             plyr.seek(to:CMTime(seconds:Double(csec), preferredTimescale:CMTimeScale(1)))
                         }
                         seek = 0
                     }
-                } else if (objc[keyPath:prog] <= 1.0) {
+                } else if (view_prog <= 1.0) {
                     cstr = form(inpt:csec)
                     tstr = form(inpt:tsec)
                     psec = (Double(csec) / Double(tsec))
-                    if (cstr != objc[keyPath:time][0]) {
-                        objc[keyPath:prog] = psec
-                        objc[keyPath:time][0] = cstr
-                        objc[keyPath:time][1] = tstr
+                    if (cstr != view_time[0]) {
+                        DispatchQueue.main.sync {
+                            self.view_prog = psec
+                            self.view_time[0] = cstr
+                            self.view_time[1] = tstr
+                        }
                     }
                 }
             }
-            let sobj = objc[keyPath:sees]
+            let sobj = view_sees
             if (hobj == nil) {
                 if (sobj != nil) {
-                    objc[keyPath:sees] = nil
+                    DispatchQueue.main.sync { self.view_sees = nil }
                 }
             } else {
                 if ((sobj == nil) || (sobj! != hobj!.id)) {
-                    objc[keyPath:sees] = hobj!.id
+                    DispatchQueue.main.sync { self.view_sees = hobj!.id }
                 }
             }
             let numt = tabt.count
             let numb = tabp.count
-            let nump = objc[keyPath:baup].count
-            let numq = objc[keyPath:tabl].count
+            let nump = view_baup.count
+            let numq = view_tabl.count
             if ((numt > 0) && (loas == 2)) {
                 if ((secs - last) >= 3) {
                     let nils = "---"
                     let dumb = make(path:nils, song:nils, band:nils, albm:nils, genr:nils, year:nils, tstr:nils, covr:nils, null:nils, dobj:Date(), time:0)
-                    let gsrt = gens(inpt:objc[keyPath:srtz])
+                    let gsrt = gens(inpt:view_srtz)
                     if (flag == 1) {
                         lock.withLock {
-                            print(Date(),"DEBUG","xfer",numt,numb,nump,numq,ldat)
+                            print(Date(),"INFO","xfer",numt,numb,nump,numq,ldat)
                             tabp = tabt
                             tabp.sort(using:gsrt)
                             coaa = [nils] ; coab = [dumb]
                             coba = [nils] ; cobb = [dumb]
                             coca = [nils] ; cocb = [dumb]
-                            objc[keyPath:srts] = gsrt
-                            objc[keyPath:baup] = tabp
-                            if (objc[keyPath:srch] == "") {
-                                objc[keyPath:tabl] = objc[keyPath:baup]
-                            }
+                            var sels = [nil, nil, nil] as [UUID?]
                             var iidx = 0
                             for item in tabp {
                                 if (save[0] != nil) {
                                     if (item.hash == save[0]!.hash) {
-                                        indx = iidx
-                                        objc[keyPath:sees] = item.id
+                                        indx = iidx ; sels[0] = item.id
                                     }
                                 }
                                 if (save[1] != nil) {
                                     if (item.hash == save[1]!.hash) {
-                                        objc[keyPath:sels] = item.id
+                                        sels[1] = item.id
                                     }
                                 }
                                 if (save[2] != nil) {
                                     if (item.hash == save[2]!.hash) {
-                                        objc[keyPath:scro] = item.id
-                                        objc[keyPath:tabb].iscr += 1
+                                        sels[2] = item.id
                                     }
                                 }
                                 if (!(coaa.contains(item.band))) { coaa.append(item.band) ; coab.append(item) }
@@ -1083,18 +1085,37 @@ class note: NotificationCenter, @unchecked Sendable {
                             coab.sort(using:gens(inpt:"band"))
                             cobb.sort(using:gens(inpt:"albm"))
                             cocb.sort(using:gens(inpt:"genr"))
-                            objc[keyPath:coad] = coab
-                            objc[keyPath:cobd] = cobb
-                            objc[keyPath:cocd] = cocb
-                            objc[keyPath:cobt] = cobb
-                            objc[keyPath:coct] = cocb
-                            objc[keyPath:refl] += 1
+                            imgs = imgt
+                            DispatchQueue.main.async {
+                                self.view_srts = gsrt
+                                self.view_baup = self.tabp
+                                if (self.view_srch == "") {
+                                    self.view_tabl = self.view_baup
+                                }
+                                if (sels[0] != nil) {
+                                    self.view_sees = sels[0]
+                                }
+                                if (sels[1] != nil) {
+                                    self.view_sels = sels[1]
+                                }
+                                if (sels[2] != nil) {
+                                    self.view_scro = sels[2]
+                                    self.view_tabb.iscr += 1
+                                }
+                                self.view_coad = self.coab
+                                self.view_cobd = self.cobb
+                                self.view_cocd = self.cocb
+                                self.view_cobt = self.cobb
+                                self.view_coct = self.cocb
+                                self.view_refl += 1
+                            }
                         }
                     }
+                    DispatchQueue.main.sync { self.view_opap = 0.00 }
                     quel.withLock {
+                        imgt.removeAll()
                         tabt.removeAll()
                     }
-                    objc[keyPath:opap] = 0.00
                     loas = 3
                     last = secs
                 }
@@ -1138,7 +1159,7 @@ class note: NotificationCenter, @unchecked Sendable {
                 }
                 menl = secs
             }
-            print(Date(),"DEBUG","loop",inil,cstr,tstr,psec,stat,chks,indx,load,numt,numb,nump,numq)
+            print(Date(),"INFO","loop",inil,cstr,tstr,psec,stat,chks,indx,load,numt,numb,nump,numq)
             usleep(357000)
         }
     }
@@ -1185,30 +1206,27 @@ class note: NotificationCenter, @unchecked Sendable {
     }
 
     func next(iidx:Int, over:Int) -> Int {
-        let objc = view!
-        let tabl = \ContentView.tabl
-        let shuf = \ContentView.shuf
         var jidx = 0
         var zidx = iidx
         var chks = gets()
         let pres = geth()
-        let leng = objc[keyPath:tabl].count
+        let leng = view_tabl.count
         halt()
         if (tabp.count < 1) { return -1 }
         if (leng < 1) { return -2 }
         if (pres != nil) {
             var i = 0
-            for item in objc[keyPath:tabl] {
+            for item in view_tabl {
                 if (item.hash == pres!.hash) { jidx = i }
                 i = (i + 1)
             }
         }
-        if (objc[keyPath:shuf][0] || objc[keyPath:shuf][1]) { zidx = Int.random(in:1..<leng) }
+        if (view_shuf[0] || view_shuf[1]) { zidx = Int.random(in:1..<leng) }
         jidx = (jidx + zidx)
         if (jidx < 0) { jidx = (leng - 1) }
         jidx = (jidx % leng)
         if (over == 1) { chks = over }
-        let _ = play(mobj:objc[keyPath:tabl][jidx], over:chks)
+        let _ = play(mobj:view_tabl[jidx], over:chks)
         return gets()
     }
 
@@ -1221,7 +1239,7 @@ class note: NotificationCenter, @unchecked Sendable {
                     relativeTo: nil,
                     bookmarkDataIsStale:&stal
                 )
-                print(Date(),"DEBUG","book",temp,temp.relativePath,book!,stal)
+                print(Date(),"INFO","book",temp,temp.relativePath,book!,stal)
                 return temp
             } catch {
                 /* no-op */
@@ -1250,7 +1268,7 @@ class note: NotificationCenter, @unchecked Sendable {
                         let chek = opan.runModal()
                         if (chek == NSApplication.ModalResponse.OK) {
                             let curl = opan.url!
-                            print(Date(),"DEBUG","open",curl)
+                            print(Date(),"INFO","open",curl)
                             do {
                                 self.book = try curl.bookmarkData(
                                     options:.withSecurityScope,
@@ -1269,7 +1287,7 @@ class note: NotificationCenter, @unchecked Sendable {
                 if (burl!.startAccessingSecurityScopedResource()) {
                     let fold = burl!.relativePath //NSString(string:"~").expandingTildeInPath
                     let mune = FileManager.default.enumerator(atPath:fold) //let cmdl = String(format:"find '%@/' -type f 2>&1 | grep -Ei '(mp3|m4a)$'", fold)
-                    print(Date(),"DEBUG","list",load,fold)
+                    print(Date(),"INFO","list",load,fold)
                     var temp = ""
                     while let elem = mune?.nextObject() as? String {
                         let fstr = elem.lowercased()
@@ -1284,7 +1302,11 @@ class note: NotificationCenter, @unchecked Sendable {
                             let mtmp = make(path:"", song:"", band:"", albm:"", genr:"", year:"", tstr:"", covr:"", null:"", dobj:Date(), time:0)
                             let list = outp.components(separatedBy:"\n").filter { !$0.isEmpty }
                             taba.removeAll()
-                            for _ in list { taba.append(mtmp) }
+                            imgt.removeAll()
+                            for _ in list {
+                                taba.append(mtmp)
+                                imgt.append("")
+                            }
                             var iidx = 0
                             for line in list {
                                 meta(iidx:iidx, path:line)
@@ -1308,7 +1330,7 @@ class note: NotificationCenter, @unchecked Sendable {
                                 if (plen == lidx) { lnum += 1 }
                                 else { lnum = 0 }
                                 lidx = plen
-                                print(Date(),"DEBUG","wait",plen,lidx,list.count,lnum)
+                                print(Date(),"INFO","wait",plen,lidx,list.count,lnum)
                             }
                             quel.withLock {
                                 tabt.removeAll()
@@ -1320,6 +1342,7 @@ class note: NotificationCenter, @unchecked Sendable {
                                 if (tabt.count != tabp.count) {
                                     relo = 1
                                 }
+                                taba.removeAll()
                             }
                             if (relo == 1) { flag = 1 }
                         }
@@ -1410,17 +1433,25 @@ class note: NotificationCenter, @unchecked Sendable {
                 }
                 i += 1
             }
+            var dmod = Date()
+            let cidx = String(iidx)
+            let covr = (minf[5][0] as! String)
             let csec = divs(a:Int64(dobj.value), b:Int64(dobj.timescale))
             let tsec = form(inpt:csec)
             let modd = mods(path:path, back:nils)
-            var dmod = Date()
             if (modd != nil) { dmod = modd! }
-            let temp = make(path:path, song:(minf[0][0] as! String), band:(minf[1][0] as! String), albm:(minf[2][0] as! String), genr:(minf[3][0] as! String), year:(minf[4][0] as! String), tstr:tsec, covr:(minf[5][0] as! String), null:"*", dobj:dmod, time:csec)
+            let temp = make(path:path, song:(minf[0][0] as! String), band:(minf[1][0] as! String), albm:(minf[2][0] as! String), genr:(minf[3][0] as! String), year:(minf[4][0] as! String), tstr:tsec, covr:cidx, null:"*", dobj:dmod, time:csec)
             if (iidx > -1) {
                 quel.withLock {
                     if (iidx < self.taba.count) {
                         self.taba[iidx] = temp
+                        self.imgt[iidx] = nils //covr
                     }
+                }
+            } else {
+                DispatchQueue.main.async {
+                    self.view_covr[0] = path
+                    self.view_covr[1] = covr
                 }
             }
         }
@@ -1431,13 +1462,9 @@ class note: NotificationCenter, @unchecked Sendable {
     }
 
     @objc func refs(_ sender: Any) {
-        let objc = view!
-        let a = \ContentView.tabl
-        let b = \ContentView.baup
-        let c = \ContentView.refl
-        objc[keyPath:a].removeAll()
-        objc[keyPath:b].removeAll()
-        objc[keyPath:c] += 1
+        view_tabl.removeAll()
+        view_baup.removeAll()
+        view_refl += 1
         tabp.removeAll()
         tabt.removeAll()
         book = nil
@@ -1533,12 +1560,13 @@ struct ContentView: View {
     var rows = 0
 
     @FocusState var isfo: Bool
+    @FocusState var fobo: Bool
+    @FocusState var pobo: Bool
 
     @State var clrs = [""].genr(inpt:["b", "g", "b", "!", "", ""], size:1000)
     @State var idxs = [99 /*icon*/, 97 /*stat*/, 95 /*filt*/, 93 /*list*/, 4 /*plst*/, 1 /*play*/]
     @State var idxf = [] as [[Any]]
 
-    @State var refl = 0
     @State var imgl = 0
     @State var wins = 0
     @State var winc = Color.clear
@@ -1547,43 +1575,27 @@ struct ContentView: View {
     @State var sldv = [Color.clear, Color.clear, Color.clear, Color.clear]
     @State var clco = [Color.clear, Color.clear, Color.clear, Color.clear, Color.clear, Color.clear, Color.clear, Color.clear]
     @State var bldr = [["band"], ["albm"], ["genr"], ["year"]]
-    @State var time = ["", ""]
     @State var mode = "play.circle"
-    @State var prog = 0.00 as CGFloat
-    @State var opap = 0.00
     @State var keyz = 0
-    @State var rotf = 0
-    @State var rota = 360.0
     @State var shws = false
     @State var fals = true
     @State var mute = false
-    @State var slir = [true, false, false]
     @State var sliv = [false, false, false]
-    @State var srch = ""
     @State var name = ""
     @State var last = 0
     @State var pidx = -1
-    @State var sels: UUID?
-    @State var scro: UUID?
-    @State var sees: UUID?
-    @State var tabl = [] as [mdat]
-    @State var baup = [] as [mdat]
-    @State var srts = [] as [KeyPathComparator<mdat>]
-    @State var coad = [] as [mdat]
     @State var coas = Set<mdat.ID>()
-    @State var cobd = [] as [mdat]
-    @State var cobt = [] as [mdat]
     @State var cobs = Set<mdat.ID>()
-    @State var cocd = [] as [mdat]
-    @State var coct = [] as [mdat]
     @State var cocs = Set<mdat.ID>()
     @State var styl = ["Light", "Dark"]
     @State var rowl = ["rows", "line"]
     @State var colu: KeyValuePairs = ["Track":\mdat.song, "Artist":\mdat.band, "Album":\mdat.albm, "Genre":\mdat.genr, "Year":\mdat.year, "Time":\mdat.tstr, "Date":\mdat.date]
-    @State var tabb = tabs.bind()
     @State var tabz: tabs?
     @State var imgd: Image?
-    @State var nobj = note()
+    @State var aart: Image?
+    @State var refr = UUID()
+
+    @StateObject var nobj = note()
 
     var body: some View {
         let epad = 8.0
@@ -1643,13 +1655,16 @@ struct ContentView: View {
                                         Circle().inset(by:-1.09).fill(colr(k:"z").opacity(0.93)).brightness(-0.39*1.09)
                                         butv(kind:"shuffle.circle", size:25.0, extr:[0.0, 0.0], iidx:3, clst:["b", "g", "b", "~"], pram:-1, actn:shfs, actc:shfz)
                                             .brightness(0.09*1.39)
+                                            .onChange(of:nobj.view_shuf) {
+                                                shuf = nobj.view_shuf
+                                            }
                                     }.offset(x:19.99, y:-0.99))
                                     Spacer()
-                                    txtv(strs:time[0], size:13.0, colr:colr(k:"t"), kind:1, bold:1).padding(.trailing, 8.0).offset(y:0.09)
-                                    slid(locks:$slir[0], edits:$slir[1], moved:$slir[2], value:$prog, colrg:$sldr[0], colrb:$sldr[1], highg:$sldr[2], highb:$sldr[3], fills:false).frame(width:ssiz[0]*0.50, height:13.0).offset(y:-0.99).onAppear {
+                                    txtv(strs:nobj.view_time[0], size:13.0, colr:colr(k:"t"), kind:1, bold:1).padding(.trailing, 8.0).offset(y:0.09)
+                                    slid(locks:$nobj.view_slir[0], edits:$nobj.view_slir[1], moved:$nobj.view_slir[2], value:$nobj.view_prog, colrg:$sldr[0], colrb:$sldr[1], highg:$sldr[2], highb:$sldr[3], fills:false).frame(width:ssiz[0]*0.50, height:13.0).offset(y:-0.99).onAppear {
                                         sldr = [colr(k:"t"), colr(k:"b"), colr(k:"th"), colr(k:"bh")]
                                     }
-                                    txtv(strs:time[1], size:13.0, colr:colr(k:"t"), kind:1, bold:1).padding(.leading, 8.0).offset(y:0.09)
+                                    txtv(strs:nobj.view_time[1], size:13.0, colr:colr(k:"t"), kind:1, bold:1).padding(.leading, 8.0).offset(y:0.09)
                                     Spacer()
                                     Color.clear.frame(width:1.0, height:1.0).contentShape(Rectangle()).overlay(ZStack {
                                         Circle().inset(by:-1.09).fill(colr(k:"z").opacity(0.93)).brightness(-0.39*1.09)
@@ -1659,26 +1674,25 @@ struct ContentView: View {
                                 }.offset(y:3.09)
                             }
                         }.frame(width:ssiz[0], height:ssiz[1])
-                            .background() { ZStack {
-                                    let radi = 17.00
-                                    let iidx = idxs[1]
-                                    let kclr = clrs[iidx][2]
-                                    RoundedRectangle(cornerRadius:radi).inset(by:-0.99).fill(colr(k:"z"))
-                                    RoundedRectangle(cornerRadius:radi).inset(by:-3.99).stroke(colr(k:kclr), lineWidth:3.99).opacity(0.91)
-                            } }.onContinuousHover { phase in
-                                switch phase {
-                                case .active:
-                                    sldr = [colr(k:"th"), colr(k:"bh"), colr(k:"th"), colr(k:"bh")]
-                                case .ended:
-                                    DispatchQueue.main.asyncAfter(deadline:.now() + 0.39) {
-                                        sldr = [colr(k:"t"), colr(k:"b"), colr(k:"th"), colr(k:"bh")]
-                                    }
+                        .background() { ZStack {
+                                let radi = 17.00
+                                let iidx = idxs[1]
+                                let kclr = clrs[iidx][2]
+                                RoundedRectangle(cornerRadius:radi).inset(by:-0.99).fill(colr(k:"z"))
+                                RoundedRectangle(cornerRadius:radi).inset(by:-3.99).stroke(colr(k:kclr), lineWidth:3.99).opacity(0.91)
+                        } }.onContinuousHover { phase in
+                            switch phase {
+                            case .active:
+                                sldr = [colr(k:"th"), colr(k:"bh"), colr(k:"th"), colr(k:"bh")]
+                            case .ended:
+                                DispatchQueue.main.asyncAfter(deadline:.now() + 0.39) {
+                                    sldr = [colr(k:"t"), colr(k:"b"), colr(k:"th"), colr(k:"bh")]
                                 }
-                            }.gesture(WindowDragGesture())
+                            }
+                        }.gesture(WindowDragGesture())
                         Spacer(minLength:0.0)
                     }.frame(height:16.0).onTapGesture {
-                        isfo = true
-                        tabb.isfo += 1
+                        focu(0)
                     }
                     HStack {  }.padding(.leading, 24.0)
                     popv()
@@ -1691,7 +1705,7 @@ struct ContentView: View {
             }.background(bgfu(k:1))
         }.background(bgfu(k:0))
         .onAppear {
-            print(Date(),"DEBUG","view","init")
+            print(Date(),"INFO","view","init")
             let _ = main()
             NSEvent.addLocalMonitorForEvents(matching:.systemDefined) { event in
                 if (event.subtype.rawValue == 8) {
@@ -1699,6 +1713,12 @@ struct ContentView: View {
                     let kflag = (event.data1 & 0x0000FFFF)
                     let kstat = ((((kflag & 0xFF00) >> 8)) == 10)
                     keye(keyc:Int32(kcode), keys:kstat)
+                }
+                return event
+            }
+            NSEvent.addLocalMonitorForEvents(matching:.keyDown) { event in
+                if let _ = event.charactersIgnoringModifiers {
+                    keyp(pres:event)
                 }
                 return event
             }
@@ -1827,22 +1847,24 @@ struct ContentView: View {
     }
 
     func main() {
-        nobj.main(objc:self)
-        isfo = true
-        time[0] = nobj.form(inpt:0)
-        time[1] = nobj.form(inpt:0)
-        shuf[1] = false
+        nobj.main()
+        nobj.view_shuf = shuf;
+        nobj.view_srtz = srtz;
+        nobj.view_time[0] = nobj.form(inpt:0)
+        nobj.view_time[1] = nobj.form(inpt:0)
+        nobj.view_shuf[1] = false
         var i = 0
         for _ in clno {
             clco[i] = Color(red:clno[i][1], green:clno[i][2], blue:clno[i][3], opacity:clno[i][4])
             i += 1
         }
-        tabb = tabb.main(tabl, colz:colu, ordr:cord, sizs:csiz, hist:chis)
-        tabz = tabs(objc:$tabb, sees:$sees, sels:$sels, scro:$scro, srts:$srtz)
-        tabb.clrs.data_rows_type = rowl[rows]
-        tabb.clrs.body_radi = 9.99
+        nobj.view_tabb = nobj.view_tabb.main(nobj.view_tabl, colz:colu, ordr:cord, sizs:csiz, hist:chis)
+        tabz = tabs(objc:$nobj.view_tabb, sees:$nobj.view_sees, sels:$nobj.view_sels, scro:$nobj.view_scro, srts:$nobj.view_srtz, refr:$refr)
+        nobj.view_tabb.clrs.data_rows_type = rowl[rows]
+        nobj.view_tabb.clrs.body_radi = 9.99
         refz()
         shma(1)
+        focu(0)
     }
 
     func gets(kind:Int) -> String {
@@ -1852,12 +1874,12 @@ struct ContentView: View {
                 if (kind == 0) { return String(format:"%@", hobj!.song) }
                 if (kind == 1) { return String(format:"%@ [%@]", hobj!.band, hobj!.genr) }
             } else {
-                if (tabl.count < 1) {
+                if (nobj.view_tabl.count < 1) {
                     if (kind == 0) { return "Loading Tracks" }
                     if (kind == 1) { return "Please Standby" }
                 } else {
                     if (kind == 0) { return "Tracks Loaded" }
-                    if (kind == 1) { return tabl.count.formatted() }
+                    if (kind == 1) { return nobj.view_tabl.count.formatted() }
                 }
             }
             return " "
@@ -1931,7 +1953,7 @@ struct ContentView: View {
 
     func prev(_ args:Int) {
         var i = -1
-        let l = time[0].components(separatedBy:":")
+        let l = nobj.view_time[0].components(separatedBy:":")
         if (l.count > 1) {
             let n = Int(l[1])
             if ((n != nil) && (n! >= 5)) { i = 0 }
@@ -1955,17 +1977,17 @@ struct ContentView: View {
         nobj.glob().withLock {
             let hobj = nobj.geth()
             if (hobj != nil) {
-                sels = hobj!.id
-                scro = hobj!.id
-                tabb.iscr += 1
+                nobj.view_sels = hobj!.id
+                nobj.view_scro = hobj!.id
+                nobj.view_tabb.iscr += 1
             }
         }
     }
 
     func fndr(_ args:Int) {
-        if (sels != nil) {
-            for item in tabl {
-                if (item.id == sels!) {
+        if (nobj.view_sels != nil) {
+            for item in nobj.view_tabl {
+                if (item.id == nobj.view_sels!) {
                     let urlp = URL(fileURLWithPath:item.path)
                     NSWorkspace.shared.activateFileViewerSelecting([urlp])
                 }
@@ -1976,7 +1998,7 @@ struct ContentView: View {
     func filt() {
         let iidx = idxs[2]
         let nows = 1970.time()
-        if (srch == "") {
+        if (nobj.view_srch == "") {
             clrs[iidx][2] = clrs[iidx][0]
             usee(9)
         } else {
@@ -1984,12 +2006,12 @@ struct ContentView: View {
         }
         if ((nows - last) <= 1) {
             DispatchQueue.main.asyncAfter(deadline:.now() + 0.50) { filt() }
-        } else if (baup.count > 0) {
-            if (srch != "") {
+        } else if (nobj.view_baup.count > 0) {
+            if (nobj.view_srch != "") {
                 do {
-                    let regx = try Regex("^.*"+srch+".*$").ignoresCase()
+                    let regx = try Regex("^.*"+nobj.view_srch+".*$").ignoresCase()
                     var temp = [] as [mdat]
-                    for item in baup {
+                    for item in nobj.view_baup {
                         if let _ = item.hash.wholeMatch(of:regx) {
                             temp.append(item)
                         }
@@ -1999,16 +2021,16 @@ struct ContentView: View {
                         temp.sort(using:gsrt)
                     }
                     nobj.glob().withLock {
-                        tabl = temp
-                        refl += 1
+                        nobj.view_tabl = temp
+                        nobj.view_refl += 1
                     }
                 } catch {
                     /* no-op */
                 }
             } else {
                 nobj.glob().withLock {
-                    tabl = baup
-                    refl += 1
+                    nobj.view_tabl = nobj.view_baup
+                    nobj.view_refl += 1
                 }
                 var i = 0
                 while (i < bldr.count) {
@@ -2052,8 +2074,8 @@ struct ContentView: View {
             }
         }
         DispatchQueue.main.asyncAfter(deadline:.now() + dely) {
-            refl += 1
-            rotf += 1
+            nobj.view_rotf += 1
+            refr = UUID()
         }
     }
 
@@ -2068,7 +2090,7 @@ struct ContentView: View {
     }
 
     func shfz() -> Int {
-        if ((shuf[0] == false) && (shuf[1] == false)) { return 0 }
+        if ((nobj.view_shuf[0] == false) && (nobj.view_shuf[1] == false)) { return 0 }
         return 1
     }
 
@@ -2191,19 +2213,22 @@ struct ContentView: View {
                         if (shwb == false) {
                             HStack {
                                 let iidx = idxs[2]
-                                TextField("Filter", text:$srch).disabled(fals).onAppear {
-                                    fals = false
-                                }.onChange(of:srch) { olds, vals in
-                                    last = 1970.time()
-                                    filt()
-                                }
-                                .showClearButton($srch)
-                                .foregroundColor(colr(k:"t"))
-                                .disableAutocorrection(true)
-                                .textFieldStyle(.plain)
-                                .font(Font.custom("Menlo", size:15.0).weight(.bold))
-                                .padding(EdgeInsets(top:1.5, leading:12.0, bottom:1.5, trailing:24.0))
-                                .overlay(RoundedRectangle(cornerRadius:13.0).inset(by:-5.0).stroke(colr(k:clrs[iidx][2]), lineWidth:3.0))
+                                TextField("Filter", text:$nobj.view_srch).showClearButton($nobj.view_srch)
+                                    .onAppear {
+                                        fals = false
+                                        fobo = false
+                                    }.onChange(of:nobj.view_srch) { olds, vals in
+                                        last = 1970.time()
+                                        filt()
+                                    }
+                                    .disabled(fals)
+                                    .defaultFocus($fobo, false).focused($fobo, equals:true).focusable(fobo, interactions:.activate).focusEffectDisabled()
+                                    .foregroundColor(colr(k:"t"))
+                                    .disableAutocorrection(true)
+                                    .textFieldStyle(.plain)
+                                    .font(Font.custom("Menlo", size:15.0).weight(.bold))
+                                    .padding(EdgeInsets(top:1.5, leading:12.0, bottom:1.5, trailing:24.0))
+                                    .overlay(RoundedRectangle(cornerRadius:13.0).inset(by:-5.0).stroke(colr(k:clrs[iidx][2]), lineWidth:3.0))
                             }.offset(x:3.99)
                         } else {
                             HStack {
@@ -2248,7 +2273,7 @@ struct ContentView: View {
             vobj = AnyView(HStack {
                 ZStack {
                     HStack {
-                        Table(coad, selection:$coas) {
+                        Table(nobj.view_coad, selection:$coas) {
                             TableColumn("Artist") { temp in
                                 txtv(strs:temp.band, size:13.0, colr:colr(k:"l"), kind:0, bold:0)
                             }
@@ -2263,10 +2288,10 @@ struct ContentView: View {
                                 var objc: mdat?
                                 var temp = [] as [mdat]
                                 if (vals.count > 0) {
-                                    for item in coad {
+                                    for item in nobj.view_coad {
                                         if (item.id == vals.first) {
                                             if (item.band != "---") {
-                                                for elem in cobd {
+                                                for elem in nobj.view_cobd {
                                                     if (elem.band == item.band) {
                                                         temp.append(elem)
                                                     }
@@ -2279,11 +2304,11 @@ struct ContentView: View {
                                         }
                                     }
                                 }
-                                if (flag == 1) { cobt = temp ; cobt.insert(contentsOf:[cobd[0]], at:0) }
-                                else { cobt = cobd }
+                                if (flag == 1) { nobj.view_cobt = temp ; nobj.view_cobt.insert(contentsOf:[nobj.view_cobd[0]], at:0) }
+                                else { nobj.view_cobt = nobj.view_cobd }
                                 if (objc != nil) { help(kind:0, colv:objc!.band) }
                             }
-                        Table(cobt, selection:$cobs) {
+                        Table(nobj.view_cobt, selection:$cobs) {
                             TableColumn("Album") { temp in
                                 txtv(strs:temp.albm, size:13.0, colr:colr(k:"l"), kind:0, bold:0)
                             }
@@ -2300,10 +2325,10 @@ struct ContentView: View {
                                 var uniq = [] as [String]
                                 var temp = [] as [mdat]
                                 if (vals.count > 0) {
-                                    for item in cobt {
+                                    for item in nobj.view_cobt {
                                         if (item.id == vals.first) {
                                             if (item.albm != "---") {
-                                                for elem in baup {
+                                                for elem in nobj.view_baup {
                                                     if ((elem.band == item.band) && (elem.albm == item.albm)) {
                                                         if (!(uniq.contains(elem.genr))) {
                                                             temp.append(elem)
@@ -2313,9 +2338,9 @@ struct ContentView: View {
                                                 }
                                                 flag = 1
                                             } else {
-                                                if (cobt.count > 1) {
-                                                    for elem in baup {
-                                                        if (elem.band == cobt[1].band) {
+                                                if (nobj.view_cobt.count > 1) {
+                                                    for elem in nobj.view_baup {
+                                                        if (elem.band == nobj.view_cobt[1].band) {
                                                             if (!(uniq.contains(elem.genr))) {
                                                                 temp.append(elem)
                                                                 uniq.append(elem.genr)
@@ -2329,11 +2354,11 @@ struct ContentView: View {
                                         }
                                     }
                                 }
-                                if (flag == 1) { coct = temp ; coct.insert(contentsOf:[cocd[0]], at:0) }
-                                else { coct = cocd }
+                                if (flag == 1) { nobj.view_coct = temp ; nobj.view_coct.insert(contentsOf:[nobj.view_cocd[0]], at:0) }
+                                else { nobj.view_coct = nobj.view_cocd }
                                 if (objc != nil) { help(kind:1, colv:objc!.albm) }
                             }
-                        Table(coct, selection:$cocs) {
+                        Table(nobj.view_coct, selection:$cocs) {
                             TableColumn("Genre") { temp in
                                 txtv(strs:temp.genr, size:13.0, colr:colr(k:"l"), kind:0, bold:0)
                             }
@@ -2346,7 +2371,7 @@ struct ContentView: View {
                         .onChange(of:cocs) { olds, vals in
                                 var objc: mdat?
                                 if (vals.count > 0) {
-                                    for item in coct {
+                                    for item in nobj.view_coct {
                                         if (item.id == vals.first) {
                                             objc = item
                                         }
@@ -2408,7 +2433,7 @@ struct ContentView: View {
                                                     HStack {
                                                         if (c > 0) {
                                                             if (e > 0.0) {
-                                                                let n = (!(srtz.lowercased().contains("reverse"))) ? "chevups.png" : "chevdos.png"
+                                                                let n = (!(nobj.view_srtz.lowercased().contains("reverse"))) ? "chevups.png" : "chevdos.png"
                                                                 let i = NSImage(named:n)
                                                                 Spacer()
                                                                 Image(nsImage:i!).resizable().renderingMode(.template).scaledToFit().frame(width:19.00, height:19.00).foregroundColor(z).offset(x:(e/1.99), y:-0.69)
@@ -2420,9 +2445,9 @@ struct ContentView: View {
                                                 if (c > 0) {
                                                     switch phase {
                                                     case .active:
-                                                        if (tabb.clrs.head_high_indx != c) { tabb.clrs.head_high_indx = c }
+                                                        if (nobj.view_tabb.clrs.head_high_indx != c) { nobj.view_tabb.clrs.head_high_indx = c }
                                                     case .ended:
-                                                        tabb.clrs.head_high_indx = -1
+                                                        nobj.view_tabb.clrs.head_high_indx = -1
                                                     }
                                                 }
                                             }
@@ -2434,8 +2459,8 @@ struct ContentView: View {
                             return AnyView(EmptyView())
                         }).pact({
                             var iidx = 0
-                            for item in baup {
-                                if ((sels != nil) && (sels! == item.id)) {
+                            for item in nobj.view_baup {
+                                if ((nobj.view_sels != nil) && (nobj.view_sels! == item.id)) {
                                     nobj.halt()
                                     nobj.indx = iidx
                                     bply(-1)
@@ -2443,38 +2468,42 @@ struct ContentView: View {
                                 iidx += 1
                             }
                         })
-                    }.onChange(of:refl) {
-                        let _ = tabo.load(tabl, iden:\mdat.id, colz:colu)
-                    }.onChange(of:srtz) {
+                    }.onChange(of:nobj.view_refl) {
+                        let _ = tabo.load(nobj.view_tabl, iden:\mdat.id, colz:colu)
+                    }.onChange(of:nobj.view_sees) {
+                        refr = UUID()
+                    }.onChange(of:nobj.view_sels) {
+                        refr = UUID()
+                    }.onChange(of:nobj.view_scro) {
+                        refr = UUID()
+                    }.onChange(of:nobj.view_srtz) {
                         nobj.glob().withLock {
                             if (pidx < 0) {
-                                srts = nobj.gens(inpt:srtz)
-                                baup.sort(using:srts)
-                                if (srch == "") { tabl = baup }
-                                nobj.sync(inpt:baup)
+                                nobj.view_srts = nobj.gens(inpt:nobj.view_srtz)
+                                nobj.view_baup.sort(using:nobj.view_srts)
+                                if (nobj.view_srch == "") { nobj.view_tabl = nobj.view_baup }
+                                nobj.sync(inpt:nobj.view_baup)
                             } else {
                                 if ((-1 < pidx) && (pidx < plst.count)) {
-                                    plst[pidx][4] = srtz
+                                    plst[pidx][4] = nobj.view_srtz
                                 }
                             }
-                            refl += 1
+                            srtz = nobj.view_srtz
+                            refr = UUID()
                         }
-                    }.onChange(of:tabb.cols.ordr) {
-                        cord = tabb.cols.ordr
-                    }.onChange(of:tabb.cols.sizs) {
-                        csiz = tabb.cols.sizs
-                    }.onChange(of:tabb.cols.hist) {
-                        chis = tabb.cols.hist
-                    }.onKeyPress(action:{ pres in
-                        keyp(pres:pres)
-                        return .handled
-                    }).frame(minHeight:400.0)
-                        .padding(EdgeInsets(top:-7.9, leading:11.0, bottom:11.0, trailing:11.0))
-                        .focusable().focusEffectDisabled().focused($isfo)
-                        .zIndex(1.0)
-                        .overlay(pref())
-                        .overlay(panv())
-                        .overlay(pana())
+                    }.onChange(of:nobj.view_tabb.cols.ordr) {
+                        cord = nobj.view_tabb.cols.ordr
+                    }.onChange(of:nobj.view_tabb.cols.sizs) {
+                        csiz = nobj.view_tabb.cols.sizs
+                    }.onChange(of:nobj.view_tabb.cols.hist) {
+                        chis = nobj.view_tabb.cols.hist
+                    }.frame(minHeight:400.0)
+                    .focused($isfo).focusable().focusEffectDisabled()
+                    .padding(EdgeInsets(top:-7.9, leading:11.0, bottom:11.0, trailing:11.0))
+                    .zIndex(1.0)
+                    .overlay(pref())
+                    .overlay(panv())
+                    .overlay(pana())
                 }
             })
         }
@@ -2489,7 +2518,7 @@ struct ContentView: View {
                     HStack {
                         HStack {
                             Spacer()
-                            let snum = (tabl.count > 0) ? tabl.count : nobj.plen
+                            let snum = (nobj.view_tabl.count > 0) ? nobj.view_tabl.count : nobj.plen
                             let stts = snum.formatted().replacingOccurrences(of:",", with:",")
                             let strv = String(format:"%@  Tracks", stts)
                             txtv(strs:strv, size:15.0, colr:colr(k:"t"), kind:3, bold:0)
@@ -2497,17 +2526,17 @@ struct ContentView: View {
                         HStack {
                             /*Rectangle().frame(width:1.0, height:1.0).foregroundColor(noco())
                              .overlay(RoundedRectangle(cornerRadius:1.0).frame(width:1.9, height:19.0).foregroundColor(colr(k:"t"))*/
-                            if let imgo = imgs() {
+                            if let imgo = imgs(mode:1) {
                                 Rectangle().frame(width:1.0, height:1.0).foregroundColor(noco()).padding(EdgeInsets(top:0.0, leading:19.0, bottom:0.0, trailing:19.0)).overlay(
                                     imgo.resizable().frame(width:45.0, height:45.0).opacity(0.75)
-                                        .rotationEffect(.degrees(rota)).onChange(of:rotf) {
-                                            if ((rotf % 2) != 0) {
+                                        .rotationEffect(.degrees(nobj.view_rota)).onChange(of:nobj.view_rotf) {
+                                            if ((nobj.view_rotf % 2) != 0) {
                                                 withAnimation(.linear(duration:1).speed(0.15).repeatForever(autoreverses:false)) {
-                                                    rota = 360.0
+                                                    nobj.view_rota = 360.0
                                                 }
                                             } else {
                                                 withAnimation(.linear(duration:0)) {
-                                                    rota = 0.0
+                                                    nobj.view_rota = 0.0
                                                 }
                                             }
                                         })
@@ -2521,7 +2550,7 @@ struct ContentView: View {
                     }.offset(x:-7.99, y:-7.99)
                     HStack {
                         Rectangle().frame(width:1.0, height:37.99).foregroundColor(noco()).overlay(ProgressView().scaleEffect(x:0.69, y:0.69, anchor:.center).offset(x:-25.99, y:-7.99))
-                    }.opacity(opap)
+                    }.opacity(nobj.view_opap)
                 }.onHover { over in
                     let iidx = idxs[4]
                     shwp = false
@@ -2554,19 +2583,24 @@ struct ContentView: View {
                                         VStack {
                                             VStack {
                                                 if let hold = nobj.geth() {
-                                                    let temp = hold.covr.data(using:.utf8)
-                                                    if let data = Data(base64Encoded:temp!) {
-                                                        if let nimg = NSImage(data:data) {
-                                                            Image(nsImage:nimg).resizable().frame(maxWidth:.infinity, maxHeight:.infinity)
-                                                        } else if let imgo = imgs() {
-                                                            imgo.resizable().frame(width:size-smol, height:size-smol)
-                                                        }
-                                                    } else if let imgo = imgs() {
-                                                        imgo.resizable().frame(width:size-smol, height:size-smol)
+                                                    //let cidx = (Int(hold.covr) != nil) ? Int(hold.covr)! : -1
+                                                    //let temp = ((-1 < cidx) && (cidx < nobj.imgs.count)) ? nobj.imgs[cidx].data(using:.utf8) : Data()
+                                                    if (hold.path != nobj.view_covr[0]) {
+                                                        let _ = nobj.meta(iidx:-1, path:hold.path)
                                                     }
-                                                } else if let imgo = imgs() {
+                                                }
+                                                if let imgo = aart {
+                                                    imgo.resizable().frame(maxWidth:.infinity, maxHeight:.infinity)
+                                                } else if let imgo = imgs(mode:2) {
                                                     imgo.resizable().frame(width:size-smol, height:size-smol)
                                                 }
+                                            }.onChange(of:nobj.view_covr) {
+                                                let temp = nobj.view_covr[1].data(using:.utf8)
+                                                if let data = Data(base64Encoded:temp!) {
+                                                    if let nimg = NSImage(data:data) {
+                                                        aart = Image(nsImage:nimg)
+                                                    } else { aart = nil }
+                                                } else { aart = nil }
                                             }
                                         }.frame(maxWidth:.infinity, maxHeight:.infinity).background(colr(k:"s")).cornerRadius(rads)
                                     )
@@ -2605,8 +2639,10 @@ struct ContentView: View {
                                                         HStack {
                                                             let iidx = idxs[3]
                                                             Spacer()
-                                                            TextField("Playlist", text:$name)
-                                                                .onChange(of:name) { olds, vals in
+                                                            TextField("Playlist", text:$name).showClearButton($name)
+                                                                .onAppear {
+                                                                    pobo = false
+                                                                }.onChange(of:name) { olds, vals in
                                                                     if (name == "") {
                                                                         clrs[iidx][2] = clrs[iidx][0]
                                                                         usee(8)
@@ -2614,8 +2650,8 @@ struct ContentView: View {
                                                                         clrs[iidx][2] = clrs[iidx][1]
                                                                     }
                                                                 }
+                                                                .defaultFocus($pobo, false).focused($pobo, equals:true).focusable(pobo, interactions:.activate).focusEffectDisabled()
                                                                 .frame(width:128.0)
-                                                                .showClearButton($name)
                                                                 .foregroundColor(colr(k:"t"))
                                                                 .disableAutocorrection(true)
                                                                 .textFieldStyle(.plain)
@@ -2820,7 +2856,7 @@ struct ContentView: View {
                                                                         }
                                                                     }.pickerStyle(.segmented).frame(width:128.0).offset(x:-9.99)
                                                                         .onChange(of:rows) {
-                                                                            tabb.clrs.data_rows_type = rowl[rows]
+                                                                            nobj.view_tabb.clrs.data_rows_type = rowl[rows]
                                                                         }
                                                                     Text(" ")
                                                                     Text(" ")
@@ -2859,8 +2895,8 @@ struct ContentView: View {
     }
 
     func padd(_ args:Int) {
-        if ((srch != "") && (name != "")) {
-            plst.append([name, srch, "f", "name"])
+        if ((nobj.view_srch != "") && (name != "")) {
+            plst.append([name, nobj.view_srch, "f", "name"])
         }
     }
 
@@ -2872,12 +2908,12 @@ struct ContentView: View {
     }
 
     func pedt(_ iidx:Int) {
-        if ((srch != "") && (name != "")) {
+        if ((nobj.view_srch != "") && (name != "")) {
             if ((-1 < iidx) && (iidx < plst.count)) {
                 if (plst[iidx].count < 3) { plst[iidx].append("f") }
                 if (plst[iidx].count < 4) { plst[iidx].append("name") }
                 plst[iidx][0] = name
-                plst[iidx][1] = srch
+                plst[iidx][1] = nobj.view_srch
             }
         }
     }
@@ -2888,14 +2924,14 @@ struct ContentView: View {
             if (plst[iidx].count < 4) { plst[iidx].append("name") }
             pidx = iidx
             name = plst[pidx][0]
-            srch = plst[pidx][1]
-            if (plst[pidx][2] == "f") { shuf[1] = false }
-            else { shuf[1] = true }
+            nobj.view_srch = plst[pidx][1]
+            if (plst[pidx][2] == "f") { nobj.view_shuf[1] = false }
+            else { nobj.view_shuf[1] = true }
         }
     }
 
     func pcol(iidx:Int) -> Color {
-        if ((srch != "") && (name != "")) {
+        if ((nobj.view_srch != "") && (name != "")) {
             if (iidx == pidx) { return colr(k:"z") }
         }
         return noco()
@@ -2913,10 +2949,10 @@ struct ContentView: View {
                 limi = 2
             }
             while (bldr[kind].count > limi) { bldr[kind].removeLast() }
-            sels = nil
-        } else if (sels != nil) {
-            for item in baup {
-                if (item.id == sels!) {
+            nobj.view_sels = nil
+        } else if (nobj.view_sels != nil) {
+            for item in nobj.view_baup {
+                if (item.id == nobj.view_sels!) {
                     let valu = [item.band, item.albm, item.genr, item.year]
                     if ((valu[kind] != "") && (valu[kind] != "---")) {
                         if (!(bldr[kind].contains(valu[kind]))) {
@@ -2944,34 +2980,39 @@ struct ContentView: View {
                 regx = (regx + line)
             }
         }
-        srch = regx
+        nobj.view_srch = regx
     }
 
     func helb(_ kind:Int) {
         help(kind:kind, colv:"")
     }
 
+    func focu(_ mode:Int) {
+        if (mode == 0) { isfo = true ; fobo = false ; pobo = false }
+        if (mode == 1) { isfo = false ; fobo = true ; pobo = false }
+        if (mode == 2) { isfo = false ; fobo = false ; pobo = true }
+    }
+
     func usee(_ mode:Int) {
-        isfo = true
-        tabb.isfo += 1
+        focu(0)
         coas.removeAll()
         cobs.removeAll()
         cocs.removeAll()
-        srch = ""
+        nobj.view_srch = ""
         name = ""
         wini = [0, 0, 0, 0]
         if (mode >= 5) {
-            shuf[1] = false
+            nobj.view_shuf[1] = false
             if (pidx > -1) {
-                let gsrt = nobj.gens(inpt:srtz)
+                let gsrt = nobj.gens(inpt:nobj.view_srtz)
                 nobj.glob().withLock {
-                    tabl.sort(using:gsrt)
+                    nobj.view_tabl.sort(using:gsrt)
                 }
                 pidx = -1
             }
         } else {
-            sels = nil
-            scro = nil
+            nobj.view_sels = nil
+            nobj.view_scro = nil
         }
     }
 
@@ -2980,34 +3021,34 @@ struct ContentView: View {
         if (pidx > -1) {
             if ((-1 < pidx) && (pidx < plst.count)) {
                 if (plst[pidx][2] == "f") {
-                    shuf[1] = false
+                    nobj.view_shuf[1] = false
                     plst[pidx][2] = "t"
                 } else {
-                    shuf[1] = true
+                    nobj.view_shuf[1] = true
                     plst[pidx][2] = "f"
                 }
             }
             iidx = 1
         }
-        if (shuf[iidx] == false) { shuf[iidx] = true }
-        else { shuf[iidx] = false }
+        if (nobj.view_shuf[iidx] == false) { nobj.view_shuf[iidx] = true }
+        else { nobj.view_shuf[iidx] = false }
     }
 
     func refz() {
         sldv = [colr(k:"b"), colr(k:"b"), colr(k:"bh"), colr(k:"bh")]
         sldr = [colr(k:"t"), colr(k:"b"), colr(k:"th"), colr(k:"bh")]
         winc = colr(k:"a")
-        tabb.clrs.head_back = colr(k:"y")
-        tabb.clrs.data_back = colr(k:"w")
-        tabb.clrs.body_bord = colr(k:"b")
-        tabb.clrs.head_text = colr(k:"l")
-        tabb.clrs.head_line_colr = colr(k:"l")
-        tabb.clrs.head_divr_colr = colr(k:"l")
-        tabb.clrs.head_high_text = colr(k:"lh")
-        tabb.clrs.head_high_back = colr(k:"yh")
-        tabb.clrs.data_text = colr(k:"l")
-        tabb.clrs.data_line_colr = colr(k:"l")
-        tabb.clrs.data_high = colr(k:"b")
+        nobj.view_tabb.clrs.head_back = colr(k:"y")
+        nobj.view_tabb.clrs.data_back = colr(k:"w")
+        nobj.view_tabb.clrs.body_bord = colr(k:"b")
+        nobj.view_tabb.clrs.head_text = colr(k:"l")
+        nobj.view_tabb.clrs.head_line_colr = colr(k:"l")
+        nobj.view_tabb.clrs.head_divr_colr = colr(k:"l")
+        nobj.view_tabb.clrs.head_high_text = colr(k:"lh")
+        nobj.view_tabb.clrs.head_high_back = colr(k:"yh")
+        nobj.view_tabb.clrs.data_text = colr(k:"l")
+        nobj.view_tabb.clrs.data_line_colr = colr(k:"l")
+        nobj.view_tabb.clrs.data_high = colr(k:"b")
         wins = 9
         imgl = 0
     }
@@ -3097,8 +3138,7 @@ struct ContentView: View {
             if (clrs[iidx][3] == "!") {
                 DispatchQueue.main.asyncAfter(deadline:.now() + 0.19) { clrs[iidx][2] = (clrs[iidx][0] + clrs[iidx][5]) }
             }
-            isfo = true
-            tabb.isfo += 1
+            focu(0)
         }.onContinuousHover { phase in
             let fstr = clrs[iidx][2].fstrs(char:"h")
             switch phase {
@@ -3134,30 +3174,30 @@ struct ContentView: View {
         return Text(strs).font(Font.custom(name[kind], size:ssiz).weight((bold != 1) ? .regular : .bold)).foregroundColor(colr).lineLimit(1).truncationMode(.tail)
     }
 
-    func keyp(pres:KeyPress) {
-        let mods = pres.modifiers.rawValue
-        let chrs = pres.characters.data(using:.utf8)!
-        print(Date(),"DEBUG","char",mods,chrs.hexs())
-        if (chrs.count == 1) {
-            if (chrs[0] == 32) { bply(-1) }
-        } else if (chrs.count == 3) {
-            if ((chrs[0] == 239) && (chrs[1] == 156)) {
-                if (chrs[2] == 131) {
-                    if (mods == 112) { seek(when:10) }
-                    else { more(-1) }
+    func keyp(pres:NSEvent) {
+        let mods = pres.modifierFlags.rawValue
+        let chrs = pres.keyCode
+        print(Date(),"INFO","keyp",mods,chrs,isfo,fobo)
+        if ((!fobo) && (!pobo)) {
+            if (mods == 0x100) {
+                if (chrs == 49) { bply(-1) }
+            } else {
+                if (chrs == 123) {
+                    if (mods == 0xa00100) { prev(-1) }
+                    if (mods == 0xb00108) { seek(when:-10) }
                 }
-                if (chrs[2] == 130) {
-                    if (mods == 112) { seek(when:-10) }
-                    else { prev(-1) }
+                if (chrs == 124) {
+                    if (mods == 0xa00100) { more(-1) }
+                    if (mods == 0xb00108) { seek(when:10) }
                 }
             }
         }
     }
 
-    func imgs() -> Image? {
+    func imgs(mode:Int) -> Image? {
         let iidx = idxs[0]
         let secs = 1970.time()
-        if ((imgd == nil) || ((secs - imgl) >= 5)) {
+        if ((imgd == nil) || ((secs - imgl) >= 5) || (mode != 1)) {
             let size = 384.0
             let rest = ((512.0 - size) / 2.0)
             let aimg = NSImage(named:"record.png")
@@ -3170,10 +3210,14 @@ struct ContentView: View {
             aimg?.lockFocus()
             bimg?.draw(in:NSRect(x:rest-21.0, y:rest, width:size, height:size), from:NSZeroRect, operation:NSCompositingOperation.sourceOver, fraction:1.0)
             aimg?.unlockFocus()
-            DispatchQueue.main.asyncAfter(deadline:.now() + 0.0) {
-                imgd = Image(nsImage:aimg!)
-                imgl = secs
+            let imgo = Image(nsImage:aimg!)
+            if (mode == 1) {
+                DispatchQueue.main.asyncAfter(deadline:.now() + 0.0) {
+                    imgd = imgo
+                    imgl = secs
+                }
             }
+            return imgo
         }
         return imgd
     }
