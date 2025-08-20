@@ -74,7 +74,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if let mainWindow = NSApp.windows.first {
             print(Date(),"DEBUG","DOWN",mainWindow.frameDescriptor)
             UserDefaults.standard.set(mainWindow.frameDescriptor, forKey:"WindowFrame")
-            mainWindow.orderOut(nil)
+            NSApplication.shared.hide(nil)
+            //mainWindow.orderOut(nil)
         }
         return false
     }
@@ -84,7 +85,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if let mainWindow = NSApp.windows.first {
             print(Date(),"DEBUG","TERM",mainWindow.frameDescriptor)
             UserDefaults.standard.set(mainWindow.frameDescriptor, forKey:"WindowFrame")
-            mainWindow.orderOut(nil)
+            NSApplication.shared.hide(nil)
+            //mainWindow.orderOut(nil)
         }
     }
 
