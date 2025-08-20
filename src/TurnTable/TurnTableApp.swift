@@ -40,25 +40,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
     }
 
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        closeMulti()
+    func savePref(name:String) -> Bool {
         if let mainWindow = NSApp.windows.first {
             mainWindow.delegate = self
             if let savedFrame = UserDefaults.standard.string(forKey:"WindowFrame") {
-                print(Date(),"DEBUG","EXEC",savedFrame)
-                mainWindow.setFrame(from:savedFrame)
-                mainWindow.makeKeyAndOrderFront(nil)
-            } else {
-                mainWindow.makeKeyAndOrderFront(nil)
-            }
-        }
-    }
-
-    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        closeMulti()
-        if let mainWindow = NSApp.windows.first {
-            if let savedFrame = UserDefaults.standard.string(forKey:"WindowFrame") {
-                print(Date(),"DEBUG","WIND",savedFrame)
+                print(Date(),"INFO","save",name,savedFrame)
                 mainWindow.setFrame(from:savedFrame)
                 mainWindow.makeKeyAndOrderFront(nil)
             } else {
@@ -69,26 +55,65 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         return true
     }
 
-    func windowShouldClose(_ sender: NSWindow) -> Bool {
-        closeMulti()
+    func hideWind(name:String) -> Bool {
         if let mainWindow = NSApp.windows.first {
-            print(Date(),"DEBUG","DOWN",mainWindow.frameDescriptor)
+            print(Date(),"INFO","hide",name,mainWindow.frameDescriptor)
             UserDefaults.standard.set(mainWindow.frameDescriptor, forKey:"WindowFrame")
-            mainWindow.orderOut(nil)
+            NSApplication.shared.hide(nil)
+            //mainWindow.orderOut(nil)
         }
         return false
     }
 
-    func applicationWillTerminate(_ notification: Notification) {
-        closeMulti()
-        if let mainWindow = NSApp.windows.first {
-            print(Date(),"DEBUG","TERM",mainWindow.frameDescriptor)
-            UserDefaults.standard.set(mainWindow.frameDescriptor, forKey:"WindowFrame")
-            mainWindow.orderOut(nil)
+    @objc func willStop(_ notification:Notification) {
+        let furl = FileManager.default.temporaryDirectory.appendingPathComponent("tt").appendingPathExtension("text")
+        do {
+            try "\n".write(to:furl, atomically:true, encoding:.utf8)
+            print(Date(),"INFO","stop",furl.path)
+        } catch {
+            print(Date(),"ERRO","stop",furl.path)
         }
     }
 
-    @MainActor func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+    @objc func doneWake(_ notification:Notification) {
+        let furl = FileManager.default.temporaryDirectory.appendingPathComponent("tt").appendingPathExtension("text")
+        let exis = FileManager.default.fileExists(atPath:furl.path)
+        if (exis) {
+            do {
+                try FileManager.default.removeItem(at:furl)
+                print(Date(),"INFO","wake",furl.path)
+            } catch {
+                print(Date(),"ERRO","wake",furl.path)
+            }
+        } else {
+            /* no-op */
+        }
+    }
+
+    func applicationDidFinishLaunching(_ notification:Notification) {
+        closeMulti()
+        let _ = savePref(name:"PEXE")
+        doneWake(Notification.init(name:NSWorkspace.didWakeNotification))
+        NSWorkspace.shared.notificationCenter.addObserver(self, selector:#selector(willStop(_:)), name:NSWorkspace.willSleepNotification, object:nil)
+        NSWorkspace.shared.notificationCenter.addObserver(self, selector:#selector(doneWake(_:)), name:NSWorkspace.didWakeNotification, object:nil)
+    }
+
+    func applicationShouldHandleReopen(_ sender:NSApplication, hasVisibleWindows flag:Bool) -> Bool {
+        closeMulti()
+        return savePref(name:"REXE")
+    }
+
+    func windowShouldClose(_ sender:NSWindow) -> Bool {
+        closeMulti()
+        return hideWind(name:"HIDE")
+    }
+
+    func applicationWillTerminate(_ notification:Notification) {
+        closeMulti()
+        let _ = hideWind(name:"TERM")
+    }
+
+    @MainActor func validateMenuItem(_ menuItem:NSMenuItem) -> Bool {
         return true
     }
 
